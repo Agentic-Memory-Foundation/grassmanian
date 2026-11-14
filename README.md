@@ -2,7 +2,7 @@
 
 Empirical working paper from the [Agentic Memory Foundation](https://github.com/Agentic-Memory-Foundation).
 
-**Paper:** [grassmanian-rag-indexing.pdf](grassmanian-rag-indexing.pdf) · ACM `sigconf` · ~8 pages · November 2026
+**Paper:** [paper.pdf](paper.pdf) / [grassmanian-rag-indexing.pdf](grassmanian-rag-indexing.pdf) · ACM `sigconf` · ~8 pages · November 2026
 
 ## Claim in one line
 

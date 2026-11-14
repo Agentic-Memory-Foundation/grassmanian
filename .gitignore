@@ -15,5 +15,3 @@ experiments/run.log
 build*.log
 dist/
 .DS_Store
-paper.pdf
-grassmanian-rag-indexing-v2.pdf
