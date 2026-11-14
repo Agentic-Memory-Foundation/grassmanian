@@ -1,60 +1,55 @@
-# Grassmannian Geometry for RAG Vector Database Indexing
+# Do Grassmannian Subspaces Help RAG Indexing?
 
-Working paper from the [Agentic Memory Foundation](https://github.com/Agentic-Memory-Foundation): a critical research assessment of using Grassmannian manifold geometry to improve indexing in vector databases for Retrieval-Augmented Generation (RAG).
+Empirical working paper from the [Agentic Memory Foundation](https://github.com/Agentic-Memory-Foundation).
 
-**Paper:** [grassmanian-rag-indexing.pdf](grassmanian-rag-indexing.pdf) · ACM `sigconf` two-column · position / assessment draft · September 2026
-
-[![Paper](https://img.shields.io/badge/Paper-PDF-red.svg)](grassmanian-rag-indexing.pdf)
+**Paper:** [grassmanian-rag-indexing.pdf](grassmanian-rag-indexing.pdf) · ACM `sigconf` · ~8 pages · November 2026
 
 ## Claim in one line
 
-The intuition that RAG embeddings carry exploitable subspace structure is plausible, but a Grassmannian index is not yet a publishable contribution: it is a new application of known subspace-clustering methods that must first prove RAG embeddings are low-rank-clustered and that Grassmannian distances beat cosine/HNSW in practice.
+Grassmannian routing helps RAG **only** when clusters are true subspaces. On SciFact + MiniLM, $k$-means clusters are only mildly low-rank, and **centroid IVF beats Grassmannian routing** (84% vs 59% neighbor recall@10). On a planted-subspace oracle, Grassmannian wins 98% vs 36%.
 
-## What this paper is
+## What we measured
 
-This is a **critical assessment**, not a measured result. It frames the idea, locates it against the Grassmannian clustering and ANN indexing literature, enumerates the technical and novelty hurdles, and prescribes the empirical and theoretical work required to turn the intuition into a publishable paper.
+| Setting | Centroid IVF | Grassmannian |
+| --- | ---: | ---: |
+| SciFact MiniLM ($C{=}32$, $k{=}8$, $P{=}4$) neighbor R@10 | **84.0%** | 59.0% |
+| SciFact relevance R@10 | **69.3%** | 55.6% |
+| Synthetic + $k$-means ($P{=}2$) | **69.5%** | 42.5% |
+| Synthetic + **oracle** subspaces ($P{=}2$) | 36.5% | **98.0%** |
 
-## Contents
+SciFact cluster rank@90% energy: **72.1** vs random **109.9** (mild structure, not a subspace collapse).
+
+## Repo layout
 
 | Path | Role |
 | --- | --- |
-| [`paper.tex`](paper.tex) | ACM two-column source (assessment / position paper) |
+| [`paper.tex`](paper.tex) | ACM two-column source |
 | [`grassmanian-rag-indexing.pdf`](grassmanian-rag-indexing.pdf) | Compiled PDF |
-| [`references.bib`](references.bib) | Bibliography (Grassmannian manifolds, subspace clustering, HNSW/ANN, RAG) |
+| [`experiments/`](experiments/) | Data loaders, Grassmann helpers, IVF/Grassmann index, runner |
+| [`figures/`](figures/) | Structure / recall / latency / synthetic plots |
+| [`generated/stats.tex`](generated/stats.tex) | Auto macros from the last run |
+| [`references.bib`](references.bib) | Bibliography |
 
-## What the paper covers
-
-1. Problem formulation and a clarified statement of the idea
-2. Novelty analysis against Grassmannian clustering and modern ANN indexing
-3. Core technical challenges: mechanistic justification, complexity mismatch, practical integration
-4. Existing work and the research gap (with a comparison table)
-5. Proposed research direction: empirical foundation, theory, practical artifact
-6. Publication strategy and venue fit
-7. Reviewer attacks and how to answer them
-8. Recommendation and alternative framings
-
-## Venue
-
-Formatted for **SIGIR / ECIR / CIKM**-style venues: ACM `sigconf`. This draft is the **assessment cut** that precedes an empirical paper. If the prescribed preliminary analysis (subspace-rank measurement on BEIR, proof-of-concept vs HNSW/FAISS) shows >20% improvement, the next cut adds experiments and targets SIGIR/ECIR; otherwise the framing pivots to Grassmannian re-ranking or semantic-subspace characterization.
-
-## Build
+## Reproduce
 
 ```bash
-make paper          # tectonic (preferred) or pdflatex+bibtex
-make arxiv          # flat TeX zip for arXiv → dist/arxiv-grassmanian.zip
+pip install -r requirements.txt
+cd experiments
+python run_experiments.py   # writes results/, figures/, generated/stats.tex
+cd ..
+make paper                  # needs MiKTeX/TeX Live (pdflatex + bibtex) or tectonic
 ```
 
-Requires [Tectonic](https://tectonic-typesetting.github.io/) or TeX Live. Sources are pdfLaTeX-safe.
+Primary SciFact config in the paper: $C{=}32$, $k{=}8$, $P{=}4$, embedder `all-MiniLM-L6-v2`.
 
-## Claims hygiene
+## Build PDF
 
-- This paper makes **no empirical claim** that RAG embeddings are low-rank-clustered; it prescribes the measurement.
-- No benchmark numbers are reported; the comparison table is qualitative.
-- Complexity figures are textbook orders for Grassmannian operations and HNSW, not measured.
-- The verdict (publishability 3/10 as framed, 6-9/10 with work) is an editorial judgment, not a result.
+```bash
+make paper
+```
 
 ## Status
 
-Assessment draft. Next step: the 2-3 week preliminary analysis prescribed in Sec. 7 (literature deep-dive, BEIR subspace-rank measurement, 10K-document proof-of-concept, decision point).
+Empirical cut superseding the September 2026 assessment-only draft. Verdict: use HNSW/IVF/PQ for single-vector RAG; reserve Grassmannian tools for multi-vector / oracle-subspace / re-ranking settings.
 
 Questions: [parag@rigai.co](mailto:parag@rigai.co)
