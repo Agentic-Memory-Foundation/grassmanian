@@ -85,7 +85,7 @@ Retrieval-augmented generation (RAG) indexes dense embeddings using partition-ba
 
 Modern RAG pipelines embed passages into $\mathbb{R}^m$ and search with graph- or partition-based ANN: HNSW~\cite{malkov2018hnsw}, FAISS IVF/PQ~\cite{johnson2019faiss,douze2024faiss,jegou2011product}, NSG~\cite{fu2019nsg}. The geometry is Euclidean by construction: embedders are trained with contrastive objectives in that space~\cite{reimers2019sbert,neelakantan2022ada,wang2022gte}.
 
-An attractive alternative intuition says: semantic categories are better modeled as \emph{linear subspaces} than as point clouds, so the Grassmannian $\grass$, representing the manifold of $k$-planes in $\mathbb{R}^m$~\cite{edelman1998grassmannian,absil2004riemannian}, should improve coarse routing. Grassmannian clustering is a mature literature~\cite{elhamifar2013sparse,vidal2011subspace,liu2016lrr,harandi2014grassmann,hu2018survey,wang2019grassmannian}, and subspace indexing models exist for vision~\cite{turaga2011statistical}. What is missing for RAG is not another geometric formalism, but an empirical answer to four questions:
+An attractive alternative intuition says: semantic categories are better modeled as \emph{linear subspaces} than as point clouds, so the Grassmannian $\grass$, representing the manifold of $k$-planes in $\mathbb{R}^m$~\cite{edelman1998grassmannian,absil2004riemannian}, should improve coarse routing. Grassmannian clustering is a mature literature~\cite{elhamifar2013sparse,vidal2011subspace,liu2016lrr,harandi2014grassmann,hu2018survey,wang2019grassmannian}, and subspace indexing models exist for vision~\cite{turaga2011statistical}. While approximate nearest subspace search~\cite{basri2011approximate} and Grassmannian hashing~\cite{wang2013fast} have been studied for general manifold search, their application as coarse routers in modern RAG vector indices remains largely unexplored. What is missing for RAG is not another geometric formalism, but an empirical answer to four questions:
 
 \begin{enumerate}
   \item Do RAG embedding clusters exhibit low-rank subspace structure beyond a random baseline?
@@ -111,7 +111,7 @@ A single query vector $q$ is treated as a $1$-plane $\mathrm{span}\{q/\|q\|\}$. 
 \begin{equation}
   d_{\mathrm{geo}}(q,U)=\arccos\!\big(\|U^\top q\|_2/\|q\|_2\big)
 \end{equation}
-(with $k{=}1$ in the query factor). This is the natural ``does $q$ lie near this subspace?'' score.
+(with $k{=}1$ in the query factor). This is the natural ``does $q$ lie near this subspace?'' score. For a detailed mathematical and computational guide to Grassmann manifold geometry, readers may refer to the handbook by Bendokat et al.~\cite{bendokat2024handbook}, and for broader application contexts, the survey on Grassmannian learning by Zhang et al.~\cite{zhang2018grassmannian}. When representing and clustering databases of subspaces, defining appropriate manifold-aware operations is crucial. Finding the representative mean or median of a set of subspaces on the Grassmannian is treated in Marrinan et al.~\cite{marrinan2014finding}, and the general framework of subspace quantization on the Grassmannian is developed in Stiverson et al.~\cite{stiverson2020subspace}.
 
 \subsection{Connection to Fusion Frames}
 \label{subsec:fusion-frames}
@@ -191,7 +191,7 @@ Complexity per query is $O(C\,mk)$ for Grassmannian and $k$-flat residual scores
 \end{enumerate}
 
 \paragraph{Complexity analysis.}
-Build cost is dominated by $k$-means plus one thin SVD per cluster, $O(N m T + C\cdot n_c m k)$ with $T$ $k$-means iterations and $n_c$ the cluster size. At query time the Grassmannian and $k$-flat routers pay an extra factor of $k$ over centroids. Approximate Grassmann kernels via random features~\cite{huang2015grassmannian} could reduce that, but only matter if the router is more accurate, which is the empirical question addressed below.
+Build cost is dominated by $k$-means plus one thin SVD per cluster, $O(N m T + C\cdot n_c m k)$ with $T$ $k$-means iterations and $n_c$ the cluster size. At query time the Grassmannian and $k$-flat routers pay an extra factor of $k$ over centroids. Approximate Grassmann kernels via random features~\cite{huang2015grassmannian} or recent advancements in random features for Grassmannian kernels~\cite{delogne2025random,delogne2026bounded} could reduce that, but only matter if the router is more accurate, which is the empirical question addressed below.
 
 \section{Experimental Setup}
 \label{sec:setup}
@@ -373,16 +373,22 @@ While Table~\ref{tab:main} shows that $k$-flat residual routing slightly beats c
 \label{sec:rw}
 
 \paragraph{Grassmannian geometry.}
-Classical differential geometry of Grassmann manifolds~\cite{wong1967grassmann} and the computational viewpoint of Edelman--Arias--Smith~\cite{edelman1998grassmannian} and Absil et al.~\cite{absil2004riemannian,absil2008optimization} underpin principal angles, geodesics, and means. Statistical models on Grassmannians appear in vision~\cite{turaga2011statistical}.
+Classical differential geometry of Grassmann manifolds~\cite{wong1967grassmann} and the computational viewpoint of Edelman--Arias--Smith~\cite{edelman1998grassmannian} and Absil et al.~\cite{absil2004riemannian,absil2008optimization} underpin principal angles, geodesics, and means. Recently, Bendokat et al.~\cite{bendokat2024handbook} compiled a detailed handbook on basic geometry and computational aspects of Grassmann manifolds, and Zhang et al.~\cite{zhang2018grassmannian} surveyed deep and shallow Grassmannian learning. Statistical models on Grassmannians also appear in computer vision~\cite{turaga2011statistical}.
 
 \paragraph{Local PCA and $k$-Flats.}
 The distance to an affine subspace (or a local PCA flat) is a classical construct in high-dimensional data modeling. Our formulation of $k$-flat residual routing directly builds on algorithms for k-plane clustering~\cite{bradley2000kplane}, local principal component analysis~\cite{kambhatla1997localpca}, and mixtures of probabilistic principal component analyzers~\cite{tipping1999ppca}. These models partition vector space into affine flats rather than origin-bound linear subspaces. Similar local reconstruction residuals have been successfully integrated in quantization frameworks such as locally optimized product quantization (LOPQ)~\cite{ge2013lopq}.
 
 \paragraph{Subspace clustering.}
-Sparse and low-rank subspace clustering~\cite{elhamifar2013sparse,vidal2011subspace,liu2016lrr} and Grassmannian clustering/dictionary learning~\cite{harandi2014grassmann,hu2014grassmannian,harandi2015sparse,wang2019grassmannian,hu2018survey} assume data that are unions of low-rank flats. Our SciFact measurements show only a mild deviation from that assumption for MiniLM clusters.
+Sparse and low-rank subspace clustering~\cite{elhamifar2013sparse,vidal2011subspace,liu2016lrr} and Grassmannian clustering, dictionary learning, and representation techniques~\cite{harandi2014grassmann,hu2014grassmannian,harandi2015sparse,wang2019grassmannian,hu2018survey,harandi2015extrinsic,harandi2013dictionary,wang2014lrr} assume data that are unions of low-rank flats. This line of work also includes intrinsic mean shift clustering on Stiefel and Grassmann manifolds~\cite{cetingul2009intrinsic}. Our SciFact measurements show only a mild deviation from that assumption for MiniLM clusters.
 
-\paragraph{Scalable Grassmann methods.}
-Recursive similarity search~\cite{cherian2014grassmannian} and random-feature Grassmann kernels~\cite{huang2015grassmannian} attack the cost of manifold operations. They matter once accuracy justifies the cost; our IVF comparison suggests that bar is not cleared for single-vector RAG routing.
+\paragraph{Scalable Grassmann methods and kernels.}
+Recursive similarity search~\cite{cherian2014grassmannian} and random-feature Grassmann kernels~\cite{huang2015grassmannian} attack the cost of manifold operations. Advanced random feature methods for Grassmannian kernels have been further developed by Delogne and Jacques~\cite{delogne2025random}, including bounds with rank-one projections~\cite{delogne2026bounded}. They matter once accuracy justifies the cost; our IVF comparison suggests that bar is not cleared for single-vector RAG routing.
+
+\paragraph{Nearest subspace search and hashing.}
+Searching for nearest subspaces is a crucial component of high-dimensional geometric search. Basri et al.~\cite{basri2011approximate} developed approximate nearest subspace search methods. To scale up such searches, Wang et al.~\cite{wang2013fast} presented fast subspace search algorithms via Grassmannian-based hashing.
+
+\paragraph{Subspace mean and quantization.}
+Defining representative statistics on the manifold and compressing them are core problems for scaling up database representations. Marrinan et al.~\cite{marrinan2014finding} studied methods for finding the subspace mean or median to fit specific application needs, while Stiverson et al.~\cite{stiverson2020subspace} developed algorithms for subspace quantization directly on the Grassmannian.
 
 \paragraph{ANN and RAG.}
 Production ANN is dominated by HNSW and FAISS IVF/PQ~\cite{malkov2018hnsw,jegou2011product,johnson2019faiss,douze2024faiss,fu2019nsg,pan2024graph}. Dense retrieval and RAG~\cite{karpukhin2020dpr,lewis2020rag,gao2024ragsurvey} and BEIR~\cite{thakur2021beir} define the evaluation contract we adopt. Sentence-BERT-style embedders~\cite{reimers2019sbert} remain the common baseline representation.
