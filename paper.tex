@@ -405,6 +405,9 @@ Grassmannian indexing for RAG is a clean idea that fails a simple linear test---
 \section*{Reproducibility}
 Code, experiment scripts, and figures are in the accompanying repository. Primary command: \texttt{python experiments/run\_experiments.py}, which regenerates \path{generated/stats.tex} and the figures under \path{figures/}.
 
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
 \appendix
 \section{Failure modes and implementation notes}
 \label{app:failures}
@@ -417,8 +420,5 @@ MiniLM clusters behave like thick cones around a non-zero mean. A linear subspac
 
 \paragraph{Implementation.}
 NumPy + scikit-learn MiniBatch $k$-means; Grassmannian scores via a stacked $(C,m,k)$ basis tensor. Embeddings cached under \path{experiments/cache/}. SciFact from HuggingFace \texttt{BeIR/scifact} with qrels-covered documents prioritized.
-
-\bibliographystyle{ACM-Reference-Format}
-\bibliography{references}
 
 \end{document}
