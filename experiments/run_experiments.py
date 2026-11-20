@@ -159,7 +159,7 @@ def run_retrieval_suite(
     for n_clusters in cluster_grid:
         if n_clusters * 5 > X.shape[0]:
             continue
-        for routing in ("centroid", "grassmann"):
+        for routing in ("centroid", "grassmann", "affine_grassmann"):
             for k in k_grid:
                 if k > X.shape[1]:
                     continue
@@ -186,7 +186,7 @@ def run_retrieval_suite(
     # Oracle partition (planted / true labels): upper bound on routing quality
     if oracle_labels is not None:
         n_c = int(oracle_labels.max()) + 1
-        for routing in ("centroid", "grassmann"):
+        for routing in ("centroid", "grassmann", "affine_grassmann"):
             for k in (4, 8):
                 index = TwoLevelIndex(
                     X, n_clusters=n_c, subspace_k=k, routing=routing, labels=oracle_labels
@@ -311,7 +311,7 @@ def make_figures(results: dict) -> None:
     if "scifact" in results:
         rows = results["scifact"]["rows"]
         fig, ax = plt.subplots(figsize=(5.2, 3.6))
-        for routing, color, marker in (("centroid", "#4a90c8", "o"), ("grassmann", "#c4564e", "s")):
+        for routing, color, marker in (("centroid", "#4a90c8", "o"), ("grassmann", "#c4564e", "s"), ("affine_grassmann", "#70a86e", "^")):
             pts = [r for r in rows if r["routing"] == routing and r["n_clusters"] == 32 and r["subspace_k"] == 8]
             if not pts:
                 pts = [r for r in rows if r["routing"] == routing]
@@ -336,7 +336,7 @@ def make_figures(results: dict) -> None:
 
         # Fig 3: ablation over k
         fig, ax = plt.subplots(figsize=(5.2, 3.6))
-        for routing, color in (("centroid", "#4a90c8"), ("grassmann", "#c4564e")):
+        for routing, color in (("centroid", "#4a90c8"), ("grassmann", "#c4564e"), ("affine_grassmann", "#70a86e")):
             xs, ys = [], []
             for k in sorted({r["subspace_k"] for r in rows}):
                 cand = [
@@ -364,7 +364,7 @@ def make_figures(results: dict) -> None:
         fig, ax = plt.subplots(figsize=(5.2, 3.6))
         # pick matched configs
         configs = []
-        for routing in ("centroid", "grassmann"):
+        for routing in ("centroid", "grassmann", "affine_grassmann"):
             for n_probe in (1, 2, 4, 8):
                 cand = [
                     r
@@ -374,7 +374,8 @@ def make_figures(results: dict) -> None:
                 if cand:
                     configs.append(cand[0])
         labels = [f"{r['routing'][:1].upper()}P{r['n_probe']}" for r in configs]
-        ax.bar(range(len(configs)), [r["query_ms"] for r in configs], color=["#4a90c8" if r["routing"] == "centroid" else "#c4564e" for r in configs])
+        colors_map = {"centroid": "#4a90c8", "grassmann": "#c4564e", "affine_grassmann": "#70a86e"}
+        ax.bar(range(len(configs)), [r["query_ms"] for r in configs], color=[colors_map[r["routing"]] for r in configs])
         ax.axhline(results["scifact"]["brute_query_ms"], color="gray", linestyle="--", label=f"brute ({results['scifact']['brute_query_ms']:.2f} ms)")
         ax.set_xticks(range(len(labels)))
         ax.set_xticklabels(labels, rotation=45, ha="right")
@@ -390,7 +391,7 @@ def make_figures(results: dict) -> None:
     if "synthetic" in results:
         rows = results["synthetic"]["rows"]
         fig, ax = plt.subplots(figsize=(5.2, 3.6))
-        for routing, color, marker in (("centroid", "#4a90c8", "o"), ("grassmann", "#c4564e", "s")):
+        for routing, color, marker in (("centroid", "#4a90c8", "o"), ("grassmann", "#c4564e", "s"), ("affine_grassmann", "#70a86e", "^")):
             pts = [r for r in rows if r["routing"] == routing and r["subspace_k"] == 4]
             pts = sorted(pts, key=lambda r: r["probed_frac"])
             ax.plot(
@@ -441,26 +442,42 @@ def summarize_for_tex(results: dict) -> str:
 
         g = pick("grassmann")
         c = pick("centroid")
-        if g and c:
+        a = pick("affine_grassmann")
+        if g and c and a:
             lines.append(f"\\newcommand{{\\GrassRecall}}{{{g['neighbor_recall@10']*100:.1f}}}")
             lines.append(f"\\newcommand{{\\CentRecall}}{{{c['neighbor_recall@10']*100:.1f}}}")
+            lines.append(f"\\newcommand{{\\AffineRecall}}{{{a['neighbor_recall@10']*100:.1f}}}")
             lines.append(f"\\newcommand{{\\GrassProbe}}{{{g['probed_frac']*100:.1f}}}")
             lines.append(f"\\newcommand{{\\CentProbe}}{{{c['probed_frac']*100:.1f}}}")
+            lines.append(f"\\newcommand{{\\AffineProbe}}{{{a['probed_frac']*100:.1f}}}")
             lines.append(f"\\newcommand{{\\GrassMs}}{{{g['query_ms']:.2f}}}")
             lines.append(f"\\newcommand{{\\CentMs}}{{{c['query_ms']:.2f}}}")
+            lines.append(f"\\newcommand{{\\AffineMs}}{{{a['query_ms']:.2f}}}")
             if "relevance_recall@10" in g:
                 lines.append(f"\\newcommand{{\\GrassRel}}{{{g['relevance_recall@10']*100:.1f}}}")
                 lines.append(f"\\newcommand{{\\CentRel}}{{{c['relevance_recall@10']*100:.1f}}}")
+                lines.append(f"\\newcommand{{\\AffineRel}}{{{a['relevance_recall@10']*100:.1f}}}")
     if "synthetic" in results:
         st = results["synthetic"]["structure"]
         lines.append(f"\\newcommand{{\\SynRank}}{{{st['mean_rank90']:.1f}}}")
         lines.append(f"\\newcommand{{\\SynRandRank}}{{{st['random_mean_rank90']:.1f}}}")
         rows = results["synthetic"]["rows"]
-        g = next((r for r in rows if r["routing"] == "grassmann" and r["n_probe"] == 2 and r["subspace_k"] == 4), None)
-        c = next((r for r in rows if r["routing"] == "centroid" and r["n_probe"] == 2 and r["subspace_k"] == 4), None)
-        if g and c:
+        g = next((r for r in rows if r["routing"] == "grassmann" and r.get("partition", "kmeans") == "kmeans" and r["n_probe"] == 2 and r["subspace_k"] == 4), None)
+        c = next((r for r in rows if r["routing"] == "centroid" and r.get("partition", "kmeans") == "kmeans" and r["n_probe"] == 2 and r["subspace_k"] == 4), None)
+        a = next((r for r in rows if r["routing"] == "affine_grassmann" and r.get("partition", "kmeans") == "kmeans" and r["n_probe"] == 2 and r["subspace_k"] == 4), None)
+        if g and c and a:
             lines.append(f"\\newcommand{{\\SynGrassRecall}}{{{g['neighbor_recall@10']*100:.1f}}}")
             lines.append(f"\\newcommand{{\\SynCentRecall}}{{{c['neighbor_recall@10']*100:.1f}}}")
+            lines.append(f"\\newcommand{{\\SynAffineRecall}}{{{a['neighbor_recall@10']*100:.1f}}}")
+        og = next((r for r in rows if r["routing"] == "grassmann" and r.get("partition") == "oracle" and r["n_probe"] == 2 and r["subspace_k"] == 4), None)
+        oc = next((r for r in rows if r["routing"] == "centroid" and r.get("partition") == "oracle" and r["n_probe"] == 2 and r["subspace_k"] == 4), None)
+        oa = next((r for r in rows if r["routing"] == "affine_grassmann" and r.get("partition") == "oracle" and r["n_probe"] == 2 and r["subspace_k"] == 4), None)
+        if og:
+            lines.append(f"\\newcommand{{\\SynOracleGrass}}{{{og['neighbor_recall@10']*100:.1f}}}")
+        if oc:
+            lines.append(f"\\newcommand{{\\SynOracleCent}}{{{oc['neighbor_recall@10']*100:.1f}}}")
+        if oa:
+            lines.append(f"\\newcommand{{\\SynOracleAffine}}{{{oa['neighbor_recall@10']*100:.1f}}}")
     return "\n".join(lines) + "\n"
 
 

@@ -90,6 +90,13 @@ class TwoLevelIndex:
             # higher cosine = better → convert to distance-like score (lower better)
             sims = self.centroids_n @ qn
             return -sims
+        elif self.routing == "affine_grassmann":
+            # Affine Grassmannian: project centered query (qn - centroid) onto centered subspace U
+            Q_c = qn - self.centroids
+            q_c_norm2 = np.sum(Q_c**2, axis=1)
+            proj = np.einsum("cmk,cm->ck", self._basis_stack, Q_c)
+            proj_norm2 = np.sum(proj**2, axis=1)
+            return np.sqrt(np.clip(q_c_norm2 - proj_norm2, 0.0, None))
         # Grassmannian (1D query): theta = arccos(||U^T q||) batched over clusters
         # stacked: (C, m, k) → (C, k)
         proj = np.einsum("cmk,m->ck", self._basis_stack, qn)

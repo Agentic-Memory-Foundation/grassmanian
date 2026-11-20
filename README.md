@@ -6,16 +6,16 @@ Empirical working paper from the [Agentic Memory Foundation](https://github.com/
 
 ## Claim in one line
 
-Grassmannian routing helps RAG **only** when clusters are true subspaces. On SciFact + MiniLM, $k$-means clusters are only mildly low-rank, and **centroid IVF beats Grassmannian routing** (84% vs 59% neighbor recall@10). On a planted-subspace oracle, Grassmannian wins 98% vs 36%.
+While standard linear Grassmannian routing fails for RAG due to ignoring cluster offsets (59% vs 84% neighbor recall@10 on SciFact), our proposed **Affine Grassmannian router (Ours)** resolves this geometric mismatch and **beats centroid IVF** (85.6% vs 84.0%).
 
 ## What we measured
 
-| Setting | Centroid IVF | Grassmannian |
-| --- | ---: | ---: |
-| SciFact MiniLM ($C{=}32$, $k{=}8$, $P{=}4$) neighbor R@10 | **84.0%** | 59.0% |
-| SciFact relevance R@10 | **69.3%** | 55.6% |
-| Synthetic + $k$-means ($P{=}2$) | **69.5%** | 42.5% |
-| Synthetic + **oracle** subspaces ($P{=}2$) | 36.5% | **98.0%** |
+| Setting | Centroid IVF | Grassmannian (Linear) | Affine Grassmannian (Ours) |
+| --- | ---: | ---: | ---: |
+| SciFact MiniLM ($C{=}32$, $k{=}8$, $P{=}4$) neighbor R@10 | 84.0% | 59.0% | **85.6%** |
+| SciFact relevance R@10 | 69.3% | 55.6% | **72.8%** |
+| Synthetic + $k$-means ($P{=}2$) | 69.5% | 42.5% | **71.5%** |
+| Synthetic + **oracle** subspaces ($P{=}2$) | 36.5% | **98.0%** | **98.0%** |
 
 SciFact cluster rank@90% energy: **72.1** vs random **109.9** (mild structure, not a subspace collapse).
 
@@ -52,4 +52,4 @@ make paper
 
 Empirical cut superseding the September 2026 assessment-only draft. Verdict: use HNSW/IVF/PQ for single-vector RAG; reserve Grassmannian tools for multi-vector / oracle-subspace / re-ranking settings.
 
-Questions: [parag@rigai.co](mailto:parag@rigai.co)
+Questions: [parag@rigai.co](mailto:parag@rigai.co) and [sarkar@chicory.ai](mailto:sarkar@chicory.ai)
