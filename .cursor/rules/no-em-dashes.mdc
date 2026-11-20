@@ -1,0 +1,11 @@
+---
+description: Do not use em-dashes (— or LaTeX ---) in papers or markdown files
+globs: **/*.{tex,md}
+alwaysApply: true
+---
+
+# Style Rule: No Em-Dashes in Writing
+
+- **No Em-Dashes:** Do not use literal em-dashes (`—`) or LaTeX triple-hyphen em-dashes (`---`) in any LaTeX documents or markdown files in this repository.
+- **Alternative Punctuation:** Use colons, semicolons, parenthetical commas, or en-dashes (`--`) with spaces to represent pauses or parenthetical explanations, as they provide cleaner academic typesetting and avoid formatting issues.
+- **Table Cells Exception:** Standard triple-hyphens `---` are permitted exclusively for indicating empty cells in LaTeX tables.

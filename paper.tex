@@ -85,7 +85,7 @@ Retrieval-augmented generation (RAG) indexes dense embeddings using partition-ba
 
 Modern RAG pipelines embed passages into $\mathbb{R}^m$ and search with graph- or partition-based ANN: HNSW~\cite{malkov2018hnsw}, FAISS IVF/PQ~\cite{johnson2019faiss,douze2024faiss,jegou2011product}, NSG~\cite{fu2019nsg}. The geometry is Euclidean by construction: embedders are trained with contrastive objectives in that space~\cite{reimers2019sbert,neelakantan2022ada,wang2022gte}.
 
-An attractive alternative intuition says: semantic categories are better modeled as \emph{linear subspaces} than as point clouds, so the Grassmannian $\grass$---the manifold of $k$-planes in $\mathbb{R}^m$~\cite{edelman1998grassmannian,absil2004riemannian}---should improve coarse routing. Grassmannian clustering is a mature literature~\cite{elhamifar2013sparse,vidal2011subspace,liu2016lrr,harandi2014grassmann,hu2018survey,wang2019grassmannian}, and subspace indexing models exist for vision~\cite{turaga2011statistical}. What is missing for RAG is not another geometric formalism, but an empirical answer to four questions:
+An attractive alternative intuition says: semantic categories are better modeled as \emph{linear subspaces} than as point clouds, so the Grassmannian $\grass$, representing the manifold of $k$-planes in $\mathbb{R}^m$~\cite{edelman1998grassmannian,absil2004riemannian}, should improve coarse routing. Grassmannian clustering is a mature literature~\cite{elhamifar2013sparse,vidal2011subspace,liu2016lrr,harandi2014grassmann,hu2018survey,wang2019grassmannian}, and subspace indexing models exist for vision~\cite{turaga2011statistical}. What is missing for RAG is not another geometric formalism, but an empirical answer to four questions:
 
 \begin{enumerate}
   \item Do RAG embedding clusters exhibit low-rank subspace structure beyond a random baseline?
@@ -191,7 +191,7 @@ Complexity per query is $O(C\,mk)$ for Grassmannian and $k$-flat residual scores
 \end{enumerate}
 
 \paragraph{Complexity analysis.}
-Build cost is dominated by $k$-means plus one thin SVD per cluster, $O(N m T + C\cdot n_c m k)$ with $T$ $k$-means iterations and $n_c$ the cluster size. At query time the Grassmannian and $k$-flat routers pay an extra factor of $k$ over centroids. Approximate Grassmann kernels via random features~\cite{huang2015grassmannian} could reduce that, but only matter if the router is more accurate---which is the empirical question below.
+Build cost is dominated by $k$-means plus one thin SVD per cluster, $O(N m T + C\cdot n_c m k)$ with $T$ $k$-means iterations and $n_c$ the cluster size. At query time the Grassmannian and $k$-flat routers pay an extra factor of $k$ over centroids. Approximate Grassmann kernels via random features~\cite{huang2015grassmannian} could reduce that, but only matter if the router is more accurate, which is the empirical question addressed below.
 
 \section{Experimental Setup}
 \label{sec:setup}
@@ -223,7 +223,7 @@ $C\in\{16,32,64\}$, $k\in\{4,8,16\}$, $P\in\{1,2,4,8\}$. Primary SciFact compari
 \label{fig:structure}
 \end{figure}
 
-Figure~\ref{fig:structure} and Table~\ref{tab:structure} summarize structure. On SciFact, mean rank@90\% energy is $\SciRank{}$ versus $\SciRandRank{}$ for random vectors of the same cluster sizes---a reduction, but not a collapse to a handful of dimensions. Intra-cluster principal angles ($\SciIntra{}$~rad) remain large; clusters are diffuse blobs, not tight $k$-flats. The synthetic control shows clearer structure under the planted geometry, as expected.
+Figure~\ref{fig:structure} and Table~\ref{tab:structure} summarize structure. On SciFact, mean rank@90\% energy is $\SciRank{}$ versus $\SciRandRank{}$ for random vectors of the same cluster sizes, representing a reduction but not a collapse to a handful of dimensions. Intra-cluster principal angles ($\SciIntra{}$~rad) remain large; clusters are diffuse blobs, not tight $k$-flats. The synthetic control shows clearer structure under the planted geometry, as expected.
 
 \begin{table}[t]
 \centering
@@ -294,7 +294,7 @@ The synthetic study clarifies \emph{when} subspace routing can help. Under $k$-m
 \label{fig:ablation}
 \end{figure}
 
-Varying $k$ (Figure~\ref{fig:ablation}, left) does not reverse the SciFact ordering: larger subspaces slightly change Grassmannian scores but do not close the gap to centroids. This matches the reduction of query-to-subspace geodesic to a single angle---extra subspace dimensions help only if they capture directions the query actually uses.
+Varying $k$ (Figure~\ref{fig:ablation}, left) does not reverse the SciFact ordering: larger subspaces slightly change Grassmannian scores but do not close the gap to centroids. This matches the reduction of query-to-subspace geodesic to a single angle: extra subspace dimensions help only if they capture directions the query actually uses.
 
 \subsection{Full SciFact grid}
 
@@ -347,7 +347,7 @@ $k$-means / $k$-Flat Residual & \textbf{50.5} & \textbf{71.5} & \textbf{82.5} \\
 \label{sec:discuss}
 
 \paragraph{Why centroids beat standard Grassmannians (and why $k$-flat residual routing recovers parity).}
-A RAG query is a point. Centroid cosine asks ``is this point near the cluster mean?'' Linear Grassmannian routing asks ``does this point lie near the cluster's principal span?'' When clusters are thick ellipsoids around a mean---the typical MiniLM/$k$-means geometry---the mean is highly informative. Standard subspace distance ignores the cluster's offset from the origin and treats all directions in $U_c$ equally, which is the wrong inductive bias for contrastive embeddings concentrated in a conical region.
+A RAG query is a point. Centroid cosine asks ``is this point near the cluster mean?'' Linear Grassmannian routing asks ``does this point lie near the cluster's principal span?'' When clusters are thick ellipsoids around a mean (the typical MiniLM/$k$-means geometry), the mean is highly informative. Standard subspace distance ignores the cluster's offset from the origin and treats all directions in $U_c$ equally, which is the wrong inductive bias for contrastive embeddings concentrated in a conical region.
 
 Our $k$-flat residual router combines both geometric perspectives: it shifts the query by subtracting the cluster mean before projecting it onto the PCA directions. This is mathematically equivalent to the local-PCA reconstruction error. Our dimension ablation shows that this score is centroid-dominated (recovering standard Euclidean distance to the mean at $k=0$). This explains why it slightly outperforms standard centroid cosine (by correcting the metric mismatch against $k$-means partitioning) while standard linear Grassmannian routing fails completely.
 
@@ -411,7 +411,7 @@ Code, experiment scripts, and figures are in the accompanying repository. Primar
 \label{app:failures}
 
 \paragraph{Centroid bias under oracle subspaces.}
-In the planted model, each cluster is a centered noisy sample from a $k$-plane. The sample mean concentrates near the origin, so $\langle q,\mu_c\rangle$ is weakly informative, while principal angles match the generative process---hence oracle Grassmannian dominates Table~\ref{tab:synthetic-grid}.
+In the planted model, each cluster is a centered noisy sample from a $k$-plane. The sample mean concentrates near the origin, so $\langle q,\mu_c\rangle$ is weakly informative, while principal angles match the generative process; hence oracle Grassmannian dominates Table~\ref{tab:synthetic-grid}.
 
 \paragraph{Subspace bias under $k$-means blobs.}
 MiniLM clusters behave like thick cones around a non-zero mean. A linear subspace through the origin over-generalizes directions; centroids keep the offset that contrastive training uses. Grassmannian routing therefore needs roughly $2\times$ the probe budget of centroids to approach the same SciFact neighbor recall (Table~\ref{tab:scifact-grid}).
