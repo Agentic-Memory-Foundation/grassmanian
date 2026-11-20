@@ -16,6 +16,8 @@ for x in sorted(rows, key=lambda z: (z["routing"], z["subspace_k"], z["n_probe"]
     rel = x.get("relevance_recall@10")
     rels = f"{rel*100:.1f}" if rel is not None else "--"
     routing_latex = x['routing'].replace('_', '\\_')
+    if routing_latex == "affine\\_grassmann":
+        routing_latex = "k-flat residual"
     lines.append(
         f"{routing_latex} & {x['subspace_k']} & {x['n_probe']} & "
         f"{x['neighbor_recall@10']*100:.1f} & {rels} & "
@@ -32,6 +34,8 @@ for x in sorted(
     key=lambda z: (z.get("partition", ""), z["routing"], z["n_probe"]),
 ):
     routing_latex = x['routing'].replace('_', '\\_')
+    if routing_latex == "affine\\_grassmann":
+        routing_latex = "k-flat residual"
     olines.append(
         f"{x.get('partition')}/{routing_latex} & {x['n_probe']} & "
         f"{x['neighbor_recall@10']*100:.1f} & {x['probed_frac']*100:.1f} \\\\"
