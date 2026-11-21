@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\caption{Evaluation slices. Docs and queries are counts after the fixed subsample. Exact nDCG@10 is cosine search on that slice, in percent, and is not a full-corpus BEIR leaderboard number. FiQA and TREC-COVID are subsampled. TREC-COVID keeps 17{,}537 judged documents out of 30{,}000, so the slice is relevance-dense.}
+\label{tab:data}
+\small
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrrrrrrr}
+\toprule
+Dataset & Docs & Full & Sub. & Q & Q full & Exact MiniLM & Exact BGE \\
+\midrule
+SciFact & 5,183 & 5,183 & no & 300 & 300 & 64.8 & 70.3 \\
+NFCorpus & 3,633 & 3,633 & no & 323 & 323 & 31.9 & 34.4 \\
+ArguAna & 8,674 & 8,674 & no & 497 & 1,406 & 36.9 & 40.4 \\
+SciDocs & 25,657 & 25,657 & no & 500 & 1,000 & 22.3 & 20.6 \\
+FiQA & 30,000 & 57,600 & yes & 500 & 648 & 43.6 & 45.6 \\
+TREC-COVID & 30,000 & 171,331 & yes & 50 & 50 & 64.3 & 83.9 \\
+\bottomrule
+\end{tabular}
+\end{table}

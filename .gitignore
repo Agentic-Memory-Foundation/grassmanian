@@ -12,6 +12,11 @@ __pycache__/
 .pytest_cache/
 experiments/cache/
 experiments/run.log
+experiments/v2/data/
+experiments/v2/emb/
+experiments/v2/results_e5/
+experiments/v2/results_scann/
+*.npz
 build*.log
 dist/
 .DS_Store

@@ -1,0 +1,25 @@
+\begin{table}[t]
+\centering
+\caption{Seed 0, one thread, batch size 1. Latency is the median of three passes over the queries. HNSW uses $M{=}32$, $\mathrm{efSearch}{=}16$. IVF-Flat uses 32 lists and 4 probes. k-flat is the NumPy router at $k{=}16$, $C{=}32$, $P{=}4$. FAISS is C++ and the k-flat column is Python, so the milliseconds are not an implementation-matched comparison. Recall is.}
+\label{tab:ann}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llrrrrrr}
+\toprule
+Data & Model & HNSW R & ms & IVF R & ms & $k$-flat R & ms \\
+\midrule
+SciFact & MiniLM & 95.0 & 0.035 & 83.6 & 0.037 & 85.3 & 0.080 \\
+SciFact & BGE & 94.7 & 0.033 & 83.4 & 0.034 & 85.5 & 0.090 \\
+NFCorpus & MiniLM & 88.1 & 0.025 & 70.6 & 0.026 & 71.4 & 0.059 \\
+NFCorpus & BGE & 86.6 & 0.028 & 65.0 & 0.025 & 70.6 & 0.063 \\
+ArguAna & MiniLM & 99.7 & 0.024 & 95.8 & 0.054 & 97.5 & 0.121 \\
+ArguAna & BGE & 99.2 & 0.023 & 94.0 & 0.068 & 96.2 & 0.103 \\
+SciDocs & MiniLM & 96.1 & 0.042 & 93.8 & 0.194 & 93.7 & 0.256 \\
+SciDocs & BGE & 95.5 & 0.040 & 92.9 & 0.194 & 92.4 & 0.222 \\
+FiQA & MiniLM & 94.2 & 0.048 & 90.1 & 0.219 & 90.2 & 0.292 \\
+FiQA & BGE & 88.7 & 0.047 & 90.5 & 0.326 & 89.8 & 0.290 \\
+TREC-COVID & MiniLM & 96.4 & 0.033 & 94.4 & 0.334 & 89.8 & 0.243 \\
+TREC-COVID & BGE & 96.2 & 0.043 & 86.2 & 0.278 & 92.0 & 0.313 \\
+\bottomrule
+\end{tabular}
+\end{table}

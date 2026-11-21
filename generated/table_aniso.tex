@@ -1,0 +1,24 @@
+\begin{table}[t]
+\centering
+\caption{Size-weighted fraction of within-cluster variance captured by the top 16 principal directions at $C{=}32$ (mean over five seeds), and the $k{=}16$ gap versus cosine at $C{=}32$, $P{=}4$, in points.}
+\label{tab:aniso}
+\small
+\begin{tabular}{llrrr}
+\toprule
+Data & Model & Var.\ @16 (\%) & $\Delta$R@10 & $\Delta$nDCG@10 \\
+\midrule
+SciFact & MiniLM & 49.0 & +2.1 & +3.3 \\
+SciFact & BGE & 44.9 & +3.5 & +3.8 \\
+NFCorpus & MiniLM & 57.1 & +2.2 & +2.4 \\
+NFCorpus & BGE & 51.8 & +4.3 & +2.5 \\
+ArguAna & MiniLM & 53.8 & +2.0 & +0.6 \\
+ArguAna & BGE & 47.1 & +2.2 & +0.8 \\
+SciDocs & MiniLM & 41.7 & +1.1 & +0.1 \\
+SciDocs & BGE & 39.5 & +0.8 & +0.1 \\
+FiQA & MiniLM & 37.6 & +0.3 & +0.6 \\
+FiQA & BGE & 37.9 & -0.6 & -0.2 \\
+TREC-COVID & MiniLM & 44.7 & -0.6 & +0.9 \\
+TREC-COVID & BGE & 38.1 & +3.3 & +0.5 \\
+\bottomrule
+\end{tabular}
+\end{table}

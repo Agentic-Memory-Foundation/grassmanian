@@ -5,5 +5,4 @@ matplotlib>=3.7
 sentence-transformers>=2.2
 datasets>=2.14
 torch>=2.0
-yt-dlp>=2023.0
-
+faiss-cpu>=1.7
