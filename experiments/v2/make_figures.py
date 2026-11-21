@@ -106,11 +106,17 @@ def fig_kcurve(summary, routing):
         ax.set_xlabel("Directions k (0 = Euclidean centroid)")
         ax.set_ylabel(ylab)
         ax.set_xlim(-1.5, 33.5)
-    # significance note uses the recall CIs stored in the k-curve summary
-    note = summary["kcurve"]["kflat_k16|C32|P4"]
+    # Holm count for the primary comparison, from the query-level file when it exists.
+    n_up = summary["kcurve"]["kflat_k16|C32|P4"]["n_sig_up"]
+    ql_path = ROOT / "results" / "query_level.json"
+    if ql_path.exists():
+        ql = json.loads(ql_path.read_text())
+        for comp in ql["comparisons"]:
+            if (comp["router"], comp["C"], comp["P"], comp["metric"]) == ("kflat_k16", 32, 4, "rec"):
+                n_up = comp["n_up"]
     axes[0].text(
         0.02, 0.98,
-        f"C=32, k=16: recall CI above 0 in {note['n_sig_up']}/12",
+        f"C=32, k=16: Holm rejects on {n_up}/12 pairs",
         transform=axes[0].transAxes, va="top", fontsize=7,
     )
     axes[0].legend(frameon=False, loc="lower right")
@@ -182,6 +188,52 @@ def _envelope(pts, budgets, y_index):
 
 
 def fig_cost(routing):
+    ql_path = ROOT / "results" / "query_level.json"
+    if ql_path.exists():
+        fig_cost_heldout(json.loads(ql_path.read_text()))
+        return
+    _fig_cost_envelope(routing)
+
+
+def fig_cost_heldout(ql):
+    panels = [
+        ("cost_total_recall", "Recall gap (points)", "Routing + scan / brute force"),
+        ("cost_scan_recall", "Recall gap (points)", "Scan cost / brute force"),
+        ("cost_scan_ndcg", "nDCG gap (points)", "Scan cost / brute force"),
+    ]
+    fig, axes = plt.subplots(1, 3, figsize=(7.2, 2.7))
+    for ax, (key, ylab, xlab) in zip(axes, panels):
+        series = ql["curves"][key]
+        budgets = np.array([row["budget"] for row in series])
+        values = np.array([row["values"] for row in series], dtype=float).T  # pairs, budgets
+        for row in values:
+            finite = np.isfinite(row)
+            if finite.any():
+                ax.plot(budgets[finite], 100 * row[finite], color="#0072B2", alpha=0.12, lw=0.7)
+        count = np.sum(np.isfinite(values), axis=0)
+        mean = np.full(budgets.shape, np.nan)
+        for j in range(len(budgets)):
+            col = values[:, j]
+            col = col[np.isfinite(col)]
+            if len(col):
+                mean[j] = col.mean()
+        show = count >= 6
+        ax.plot(budgets[show], 100 * mean[show], color="#0072B2", lw=1.6, label="k-flat minus cosine")
+        ax.axhline(0, color="#444444", lw=0.7)
+        ax.set_xscale("log")
+        ax.set_xticks([0.02, 0.1, 0.5])
+        ax.set_xticklabels(["2%", "10%", "50%"], fontsize=7)
+        ax.minorticks_off()
+        ax.set_xlabel(xlab)
+        ax.set_ylabel(ylab)
+        ax.set_xlim(0.018, 0.55)
+    axes[0].legend(frameon=False, loc="lower right", fontsize=7)
+    fig.tight_layout()
+    fig.savefig(FIG / "fig_cost.pdf")
+    plt.close(fig)
+
+
+def _fig_cost_envelope(routing):
     budgets = np.logspace(np.log10(0.02), np.log10(0.5), 28)
     panels = [
         ("cost_total", 1, "Recall@10", "Routing + scan cost / brute force"),

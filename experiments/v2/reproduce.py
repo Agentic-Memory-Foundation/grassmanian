@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
-"""Rebuild the paper's figures and tables from the released JSON.
+"""Rebuild the paper's figures and tables.
 
     python experiments/v2/reproduce.py
 
-That command does not download data and does not refit clusters. It is the
-command behind every figure and table in the paper.
-
-A from-scratch rerun of the released 12-pair grid is a different, long job:
+reads experiments/v2/results/summary.json and query_level.json. It does not
+download data and does not refit clusters. query_level.json holds the
+Holm-Bonferroni decisions and the 5-fold cross-validated budgets.
 
     python experiments/v2/reproduce.py --full
 
-It downloads BEIR, encodes MiniLM and BGE-small, and runs routing, the
-cheap-basis ablation, and the FAISS baselines. e5-small-v2, extra seeds,
-and ScaNN are not part of that grid. See README.md.
+reruns the released MiniLM and BGE-small grid, then rebuilds query_level.json
+from the per-query arrays. e5-small-v2, extra seeds, and ScaNN are not part
+of that grid.
 """
 from __future__ import annotations
 
@@ -46,6 +45,7 @@ def full_grid():
             run([sys.executable, str(ROOT / "run_cheap.py"), ds, emb])
             run([sys.executable, str(ROOT / "run_baselines.py"), ds, emb])
     run([sys.executable, str(ROOT / "aggregate.py")])
+    run([sys.executable, str(ROOT / "query_level.py"), str(ROOT / "results")])
     rebuild_artifacts()
 
 

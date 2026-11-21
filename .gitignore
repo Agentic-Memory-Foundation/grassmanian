@@ -16,6 +16,7 @@ experiments/v2/data/
 experiments/v2/emb/
 experiments/v2/results_e5/
 experiments/v2/results_scann/
+experiments/v2/results_repro/
 *.npz
 build*.log
 dist/
