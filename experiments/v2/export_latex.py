@@ -347,7 +347,8 @@ def write_tables(summary):
 \centering
 \caption{Mean gap versus cosine IVF at $C{=}32$, $P{=}4$, unweighted over 12 dataset/embedder pairs. Counts are Holm-Bonferroni rejections at family-wise 5\% across those 12 pairs (positive, then negative). Recall and nDCG are separate families. The test is a two-sided percentile bootstrap of the seed-averaged per-query difference, 2000 resamples. Gaps are percentage points.}
 \label{tab:routers}
-\small
+\footnotesize
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{lrrrr}
 \toprule
 Router & $\Delta$R@10 & R up/down & $\Delta$nDCG@10 & n up/down \\
@@ -373,7 +374,7 @@ Router & $\Delta$R@10 & R up/down & $\Delta$nDCG@10 & n up/down \\
                 f"& {cell_delta(kf['d_recall_vs_cos'], flags[('kflat_k16', 32, 4, 'rec')][pair])} & {pct(cos['ndcg'][0])} & {pct(kf['ndcg'][0])} "
                 f"& {cell_delta(kf['d_ndcg_vs_cos'], flags[('kflat_k16', 32, 4, 'ndcg')][pair])} & {pct(blob['exact_ndcg'])} \\\\"
             )
-    table_per = r"""\begin{table}[t]
+    table_per = r"""\begin{table*}[t]
 \centering
 \caption{Cosine IVF and the $k{=}16$ k-flat router at $C{=}32$, $P{=}4$. All figures are percentages. Brackets are uncorrected 95\% percentile bootstrap intervals on the difference (k-flat minus cosine). Bold marks a Holm-Bonferroni rejection at family-wise 5\% across the 12 pairs, for that metric. An interval can exclude zero without being bold. Exact is full cosine search on the evaluated document set, not a published full-corpus BEIR number. TREC-COVID uses 50 queries, so its intervals are wide.}
 \label{tab:perpair}
@@ -386,7 +387,7 @@ Data & Model & R cos & R $k$16 & $\Delta$R [CI] & n cos & n $k$16 & $\Delta$n [C
 """ + "\n".join(body) + r"""
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 """
     (GEN / "table_perpair.tex").write_text(table_per)
 
@@ -401,7 +402,7 @@ Data & Model & R cos & R $k$16 & $\Delta$R [CI] & n cos & n $k$16 & $\Delta$n [C
                 reject = summary["_holm_flags"][(key, 32, 4, "rec")][f"{ds}|{emb}"]
                 cells.append(cell_delta(triple, reject))
             drows.append(" & ".join(cells) + r" \\")
-    table_delta = r"""\begin{table}[t]
+    table_delta = r"""\begin{table*}[t]
 \centering
 \caption{Recall@10 gap versus cosine IVF, in points, at $C{=}32$, $P{=}4$. Brackets are uncorrected 95\% percentile bootstrap intervals. Bold marks a Holm-Bonferroni rejection at family-wise 5\% across the 12 pairs for that column.}
 \label{tab:deltas}
@@ -414,7 +415,7 @@ Data & Model & $k{=}0$ & Grass. & $k{=}4$ & $k{=}8$ & $k{=}16$ & $k{=}32$ & PPCA
 """ + "\n".join(drows) + r"""
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 """
     (GEN / "table_deltas.tex").write_text(table_delta)
 
@@ -440,7 +441,7 @@ Data & Model & $k{=}0$ & Grass. & $k{=}4$ & $k{=}8$ & $k{=}16$ & $k{=}32$ & PPCA
             f"{label} & {sm['n']} & {pct(sm['dr'], True)} ({sm['r_up']}/{sm['r_dn']}) "
             f"& {pct(sm['dn'], True, 2)} ({sm['n_up']}/{sm['n_dn']}) \\\\"
         )
-    table_matched = r"""\begin{table}[t]
+    table_matched = r"""\begin{table*}[t]
 \centering
 \caption{Held-out gap, k-flat minus cosine IVF, inside a multiply-add budget. For each of 5 query folds the config is chosen on the other folds and scored on the held-out fold. Recall and nDCG are selected separately. Parentheses are Holm-Bonferroni rejections across the pairs that have a feasible config on every fold (positive, then negative). When fewer than 12 pairs are feasible, that smaller set is the family. A pair whose held-out mean is positive need not reject.}
 \label{tab:matched}
@@ -452,7 +453,7 @@ Budget & Pairs & $\Delta$ recall (Holm up/down) & $\Delta$ nDCG (Holm up/down) \
 """ + "\n".join(mrows) + r"""
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 """
     (GEN / "table_matched.tex").write_text(table_matched)
 
@@ -468,7 +469,7 @@ Budget & Pairs & $\Delta$ recall (Holm up/down) & $\Delta$ nDCG (Holm up/down) \
                 f"{DS_NAME[ds]} & {EMB_NAME[emb]} & {pct(h['recall'])} & {h['ms']:.3f} "
                 f"& {pct(iv['recall'])} & {iv['ms']:.3f} & {pct(k['recall'])} & {k['ms']:.3f} \\\\"
             )
-    table_ann = r"""\begin{table}[t]
+    table_ann = r"""\begin{table*}[t]
 \centering
 \caption{Seed 0, one thread, batch size 1. Latency is the median of three passes over the queries. HNSW uses $M{=}32$, $\mathrm{efSearch}{=}16$. IVF-Flat uses 32 lists and 4 probes. k-flat is the NumPy router at $k{=}16$, $C{=}32$, $P{=}4$. FAISS is C++ and the k-flat column is Python, so the milliseconds are not an implementation-matched comparison. Recall is.}
 \label{tab:ann}
@@ -481,7 +482,7 @@ Data & Model & HNSW R & ms & IVF R & ms & $k$-flat R & ms \\
 """ + "\n".join(arows) + r"""
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 """
     (GEN / "table_ann.tex").write_text(table_ann)
 
@@ -494,7 +495,7 @@ Data & Model & HNSW R & ms & IVF R & ms & $k$-flat R & ms \\
                 f"{DS_NAME[ds]} & {EMB_NAME[emb]} & {pct(row['explained_frac_k16'])} "
                 f"& {pct(row['gain_recall'], True)} & {pct(row['gain_ndcg'], True)} \\\\"
             )
-    table_an = r"""\begin{table}[t]
+    table_an = r"""\begin{table*}[t]
 \centering
 \caption{Size-weighted fraction of within-cluster variance captured by the top 16 principal directions at $C{=}32$ (mean over five seeds), and the $k{=}16$ gap versus cosine at $C{=}32$, $P{=}4$, in points.}
 \label{tab:aniso}
@@ -506,7 +507,7 @@ Data & Model & Var.\ @16 (\%) & $\Delta$R@10 & $\Delta$nDCG@10 \\
 """ + "\n".join(irows) + r"""
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 """
     (GEN / "table_aniso.tex").write_text(table_an)
 
@@ -542,7 +543,7 @@ Data & Model & Var.\ @16 (\%) & $\Delta$R@10 & $\Delta$nDCG@10 \\
         crows.append(
             f"{labels[key]} & {pct(rec)} & {pct(nd)} & {pct(dr, True, 2)} & {pct(dn, True, 2)} & {kavg:.1f} & {mem:.0f} \\\\"
         )
-    table_cheap = r"""\begin{table}[t]
+    table_cheap = r"""\begin{table*}[t]
 \centering
 \caption{Cheaper $k$-flat variants at $C{=}32$, $P{=}4$. Means over 12 pairs and five seeds. Deltas are versus fp32 $k{=}16$, in points. Router memory is the mean of the per-pair byte counts, in KB, and does not include the document vectors.}
 \label{tab:cheap}
@@ -555,7 +556,7 @@ Variant & R@10 & nDCG & $\Delta$R & $\Delta$n & Mean $k$ & KB \\
 """ + "\n".join(crows) + r"""
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 """
     (GEN / "table_cheap.tex").write_text(table_cheap)
 
@@ -576,7 +577,7 @@ Variant & R@10 & nDCG & $\Delta$R & $\Delta$n & Mean $k$ & KB \\
         )
     # The comma in 8,674 needs to not break if we use siunitx; we are not. But 8,674 in tabular is fine.
     # Wait: {blob['N']:,} produces 8,674 which is OK in text.
-    table_data = r"""\begin{table}[t]
+    table_data = r"""\begin{table*}[t]
 \centering
 \caption{Evaluation slices. Docs and queries are counts after the fixed subsample. Exact nDCG@10 is cosine search on that slice, in percent, and is not a full-corpus BEIR leaderboard number. FiQA and TREC-COVID are subsampled. TREC-COVID keeps 17{,}537 judged documents out of 30{,}000, so the slice is relevance-dense.}
 \label{tab:data}
@@ -589,7 +590,7 @@ Dataset & Docs & Full & Sub. & Q & Q full & Exact MiniLM & Exact BGE \\
 """ + "\n".join(drows) + r"""
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 """
     (GEN / "table_data.tex").write_text(table_data)
 
@@ -606,7 +607,7 @@ Dataset & Docs & Full & Sub. & Q & Q full & Exact MiniLM & Exact BGE \\
                 row = summary["kcurve"][id_]
                 cells.append(f"{pct(row['d_recall'], True)}/{pct(row['d_ndcg'], True)} ({row['n_sig_up']})")
             krows.append(" & ".join(cells) + r" \\")
-    table_kc = r"""\begin{table}[t]
+    table_kc = r"""\begin{table*}[t]
 \centering
 \caption{Unweighted mean gap versus cosine IVF, as recall/nDCG in points. The parenthesis is the number of Holm-Bonferroni rejections in the positive direction for recall, across the 12 pairs. Grassmannian routing was not run at $C \in \{128, 256\}$. When $P{=}C$ the probed set is the whole corpus and every gap is zero.}
 \label{tab:kcurve}
@@ -619,7 +620,7 @@ $C$ & $P$ & $k{=}0$ & $k{=}8$ & $k{=}16$ & $k{=}32$ & Grass. \\
 """ + "\n".join(krows) + r"""
 \bottomrule
 \end{tabular}
-\end{table}
+\end{table*}
 """
     (GEN / "table_kcurve.tex").write_text(table_kc)
     print("wrote tables to", GEN)

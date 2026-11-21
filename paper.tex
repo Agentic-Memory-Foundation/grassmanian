@@ -1,10 +1,11 @@
 \PassOptionsToPackage{expansion=false,protrusion=false,tracking=false,kerning=false,spacing=false}{microtype}
-\documentclass[manuscript,screen,nonacm]{acmart}
+\documentclass[sigconf,nonacm]{acmart}
 
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage{graphicx}
 \usepackage{placeins}
+\usepackage{dblfloatfix}
 \let\Bbbk\relax
 \usepackage{amssymb}
 \usepackage{amsmath}
@@ -128,13 +129,12 @@ The $k$-flat mean then rises with $k$. Recall gaps are \KFourR, \KEightR, \KSixt
 \input{generated/table_routers.tex}
 \input{generated/table_perpair.tex}
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_kcurve.pdf}
 \caption{Gap versus cosine IVF at $P = 4$. Lines are unweighted means over the twelve pairs. Faint curves are the individual pairs. $k = 0$ is Euclidean distance to $\mu_c$. The annotation is the Holm rejection count for recall at $C = 32$, $k = 16$.}
 \label{fig:kcurve}
-\end{figure}
-\FloatBarrier
+\end{figure*}
 
 \subsection{Budgets chosen on held-out queries}
 \label{sec:cost}
@@ -145,13 +145,12 @@ With scan cost only, the ordering changes. At 10\% of brute force the held-out r
 
 \input{generated/table_matched.tex}
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_cost.pdf}
 \caption{Held-out gap, $k$-flat minus cosine, for the configuration chosen on the complementary query folds. Faint curves are pairs. The line is the mean over pairs that have a feasible configuration. A negative gap favors cosine. This is not an envelope fit on the evaluation queries.}
 \label{fig:cost}
-\end{figure}
-\FloatBarrier
+\end{figure*}
 
 \subsection{What else the same runs show}
 \label{sec:rest}
@@ -162,22 +161,22 @@ The one exception on recall is FiQA with BGE: the NumPy router has 89.8\% and HN
 
 \input{generated/table_ann.tex}
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fig_ann.pdf}
+\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{figures/fig_ann.pdf}
 \caption{Recall@10 against single-thread latency (seed 0, batch size 1, median of three passes). HNSW varies $\mathrm{efSearch}$. IVF-Flat varies lists and probes. The NumPy points are a Python prototype. FAISS is C++.}
 \label{fig:ann}
-\end{figure}
-\FloatBarrier
+\end{figure*}
 
 fp16 bases match fp32. int8 changes recall by \CheapIntDR{} points and nDCG by \CheapIntDN{} points (Table~\ref{tab:cheap}). A single basis shared by every cluster is much worse (\CheapSharedDR{} recall points at $k = 16$). Per-cluster adaptive $k$ does not beat a fixed $k = 16$. The Spearman correlation between explained variance at $k = 16$ and the recall gap is \SpearmanR{} ($p = \SpearmanRp$, $n = 12$); with the nDCG gap it is \SpearmanN{} ($p = \SpearmanNp$). Those are ordinary Spearman tests on 12 pairs, not the bootstrap Holm test, and we do not treat them as established. Table~\ref{tab:aniso} lists the twelve fractions.
 
-\begin{figure}[ht]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=0.68\textwidth]{figures/fig_aniso.pdf}
+\includegraphics[width=\textwidth]{figures/fig_aniso.pdf}
 \caption{Explained variance at $k = 16$, $C = 32$, against the $k = 16$ gap at $P = 4$. The $p$-values are ordinary Spearman tests on 12 pairs, not the bootstrap Holm test used in the tables.}
 \label{fig:aniso}
-\end{figure}
+\end{figure*}
+\clearpage
 
 \section{Discussion and related work}
 \label{sec:discuss}
@@ -221,8 +220,8 @@ with $k = 16$. Dropping $\tfrac{m}{2}\log 2\pi$, which is the same for every clu
   s_c^{\mathrm{ppca}}(q)
   &= \tfrac12\sum_{j=1}^{k}\log\lambda_{c,j}
    + \tfrac12(m-k)\log\sigma_c^2 \\
-  &\quad + \tfrac12\sum_{j=1}^{k}\frac{z_{c,j}^2}{\lambda_{c,j}}
-   + \tfrac12\frac{d_{\mathrm{flat}}(q,F_c)^2}{\sigma_c^2}
+  &\quad + \tfrac12\sum_{j=1}^{k}\frac{z_{c,j}^2}{\lambda_{c,j}} \\
+  &\quad + \tfrac12\frac{d_{\mathrm{flat}}(q,F_c)^2}{\sigma_c^2}
    - \log(n_c/N).
 \end{aligned}
 \label{eq:ppca}
@@ -252,22 +251,24 @@ Table~\ref{tab:deltas} gives the pair-level recall gap for every router at $C = 
 \input{generated/table_deltas.tex}
 \input{generated/table_kcurve.tex}
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fig_scan_recall.pdf}
+\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{figures/fig_scan_recall.pdf}
 \caption{Neighbor recall@10 against the fraction of the corpus scanned. On this scale cosine and the $k$-flat nearly overlap. Linear Grassmannian routing stays far below. It was not run at $C \in \{128, 256\}$.}
 \label{fig:scan}
-\end{figure}
+\end{figure*}
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fig_scan_ndcg.pdf}
+\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{figures/fig_scan_ndcg.pdf}
 \caption{nDCG@10 against the fraction scanned, same routers as Figure~\ref{fig:scan}.}
 \label{fig:scanndcg}
-\end{figure}
+\end{figure*}
+\clearpage
 
 \input{generated/table_aniso.tex}
 \input{generated/table_cheap.tex}
+\clearpage
 
 \section{Synthetic positive control}
 \label{app:synthetic}
@@ -278,7 +279,7 @@ Under the oracle partition, linear routing and the $k$-flat residual both sit at
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.72\textwidth]{figures/fig_synthetic.pdf}
+\includegraphics[width=\columnwidth]{figures/fig_synthetic.pdf}
 \caption{Planted subspaces, legacy run. Not re-run.}
 \label{fig:synthetic}
 \end{figure}

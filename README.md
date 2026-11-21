@@ -2,7 +2,7 @@
 
 Local principal directions as a routing signal for partitioned dense retrieval. Empirical preprint from the [Agentic Memory Foundation](https://github.com/Agentic-Memory-Foundation).
 
-**Paper:** [grassmanian-rag-indexing.pdf](grassmanian-rag-indexing.pdf). ACM `acmart` manuscript, `nonacm`. November 2026.
+**Paper:** [grassmanian-rag-indexing.pdf](grassmanian-rag-indexing.pdf). ACM `acmart` `sigconf`, `nonacm`, 14 pages. November 2026.
 
 ## Claim in one line
 
