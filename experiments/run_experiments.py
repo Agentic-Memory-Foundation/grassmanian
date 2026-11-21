@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Run Grassmannian-vs-IVF indexing experiments and subspace-structure analysis."""
+"""Legacy SciFact and synthetic runner. Not the source of the paper tables.
+
+The twelve-pair results, figures, and LaTeX tables come from experiments/v2.
+This script is the single-seed SciFact study and the planted-subspace control.
+"""
 from __future__ import annotations
 
 import json

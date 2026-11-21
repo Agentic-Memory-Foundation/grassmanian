@@ -1,9 +1,8 @@
 \PassOptionsToPackage{expansion=false,protrusion=false,tracking=false,kerning=false,spacing=false}{microtype}
-\documentclass[sigconf,screen,nonacm]{acmart}
+\documentclass[manuscript,screen,nonacm]{acmart}
 
 \usepackage{booktabs}
 \usepackage{array}
-\usepackage{tabularx}
 \usepackage{graphicx}
 \usepackage{placeins}
 \let\Bbbk\relax
@@ -11,10 +10,9 @@
 \usepackage{amsmath}
 \usepackage{enumitem}
 \usepackage{xurl}
-\usepackage{seqsplit}
 \usepackage{xcolor}
 \usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning,shapes.geometric,fit,calc}
+\usetikzlibrary{arrows.meta,positioning}
 
 \setlist{nosep}
 \setlist[itemize]{leftmargin=1.2em}
@@ -26,23 +24,14 @@
 \setlength{\emergencystretch}{3.5em}
 \tolerance=2500
 \hbadness=10000
-\newcommand{\code}[1]{\texttt{\seqsplit{#1}}}
-\newcommand{\secref}[1]{Sec.~\ref{#1}}
-\newcommand{\grass}{\mathrm{Gr}(k,\mathbb{R}^m)}
 
 \AtBeginDocument{\microtypesetup{activate=false}}
-\AtBeginDocument{%
-  \setlength{\abovedisplayskip}{4pt plus 1pt minus 1pt}%
-  \setlength{\belowdisplayskip}{4pt plus 1pt minus 1pt}%
-}
 
 \definecolor{euclid}{RGB}{232,244,253}
 \definecolor{grassbg}{RGB}{255,243,224}
-\definecolor{planebar}{RGB}{70,130,180}
-\definecolor{warnbar}{RGB}{196,86,86}
+\definecolor{flatbg}{RGB}{232,245,233}
 
-\title{Do Grassmannian Subspaces Help {RAG} Indexing?\\
-An Empirical Characterization of Subspace Routing and $k$-Flat Residuals}
+\title{Looking Along the Cluster: Local Principal Directions as a Routing Signal for Partitioned Dense Retrieval}
 
 \author{Parag Paul}
 \email{parag@rigai.co}
@@ -62,19 +51,36 @@ An Empirical Characterization of Subspace Routing and $k$-Flat Residuals}
 
 \renewcommand{\shortauthors}{Paul and Sarkar}
 
-\acmConference[Working Paper]{Agentic Memory Foundation}{November 2026}{Seattle, USA}
 \acmYear{2026}
 \setcopyright{none}
 \acmISBN{}
 \acmDOI{}
 
-\input{generated/stats.tex}
+\begin{CCSXML}
+<ccs2012>
+<concept>
+<concept_id>10002951.10003317.10003338</concept_id>
+<concept_desc>Information systems~Retrieval models and ranking</concept_desc>
+<concept_significance>500</concept_significance>
+</concept>
+<concept>
+<concept_id>10002951.10003317.10003325</concept_id>
+<concept_desc>Information systems~Information retrieval query processing</concept_desc>
+<concept_significance>300</concept_significance>
+</concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Information systems~Retrieval models and ranking}
+\ccsdesc[300]{Information systems~Information retrieval query processing}
+
+\keywords{dense retrieval, approximate nearest neighbor search, inverted file index, local PCA, retrieval-augmented generation}
+
+\input{generated/numbers.tex}
 
 \begin{abstract}
-Retrieval-augmented generation (RAG) indexes dense embeddings using partition-based approximate nearest neighbor (ANN) methods. A recurring intuition in geometric information retrieval is that semantic categories form low-dimensional \emph{linear subspaces}, suggesting that indexing on the Grassmannian $\grass$ (via principal angles) should improve coarse routing compared to simple centroid-based IVF. We turn this intuition into a concrete empirical study, testing it against standard baselines on SciFact with MiniLM-L6 embeddings. We find that standard linear Grassmannian routing underperforms centroid IVF (neighbor recall@10 $\GrassRecall{}\%$ vs.\ $\CentRecall{}\%$) because the through-origin linear projection discards cluster centroid offsets, violating the conical structure of contrastive embedding spaces. To address this, we evaluate \emph{$k$-flat residual routing} (historically related to local PCA and mixtures of probabilistic PCA), which centers queries before projecting them onto cluster PCA directions. While this formulation recovers centroid parity and yields a modest gain ($\AffineRecall{}\%$ recall), a dimension ablation shows that recall is nearly flat from $k{=}4$ to $k{=}8$, indicating that the gain stems from switching to a mathematically consistent Euclidean distance score (which matches the underlying $k$-means objective) rather than genuine subspace geometry. Furthermore, structural measurements reveal that SciFact clusters are only mildly low-rank compared to matched Gaussian noise (rank@90\% energy $\SciRank{}$ vs.\ $\SciRandRank{}$). We conclude that while pure linear Grassmannian routing can underperform on standard contrastive RAG embeddings, $k$-flat residual routing provides a consistent, albeit minor, metric correction. We release our code, figures, and experiment suite.
+Partition-based approximate nearest neighbor (ANN) indexes route each query to a few clusters by comparing it with cluster centroids. We ask whether the shape of each cluster, not only its center, is a useful routing signal for retrieval-augmented generation (RAG). We compare three routers over the same $k$-means partition: cosine-to-centroid (standard IVF), the angle to a through-origin linear subspace (Grassmannian routing), and the residual distance to the cluster's affine $k$-flat (centroid plus top-$k$ PCA directions), a classical local-PCA construction. On 6 BEIR datasets with 2 sentence embedders, 5 $k$-means seeds, and paired bootstrap confidence intervals, linear Grassmannian routing is far worse than IVF (\GrassR{} points of neighbor recall@10 at 32 clusters and 4 probes), because it discards the cluster offset. On average, the $k$-flat router improves on IVF at equal clusters and probes, and the mean gain grows with $k$: \KEightR, \KSixteenR, and \KThirtyTwoR{} recall points and \KEightN, \KSixteenN, and \KThirtyTwoN{} nDCG@10 points for $k = 8$, $16$, and $32$. At $k = 16$ the recall interval lies above zero in \KSixteenUp{} of 12 pairs and the nDCG interval in \KSixteenNUp{} of 12. Plain Euclidean distance to the centroid ($k = 0$) is worse than cosine. The improvement therefore comes from the local principal directions. Under an explicit cost model the picture is mixed: when routing cost is counted on these small corpora, finer cosine IVF wins, while at a fixed scan budget $k$-flat routing gives similar neighbor recall and higher nDCG@10. Bases can be stored in int8 with a mean change of $-0.02$ recall points, but a single shared basis or per-cluster adaptive $k$ does not help. FAISS HNSW has higher recall@10 than our NumPy $k$-flat router in \HnswRecallWins{} of 12 pairs. We release code and aggregated results.
 \end{abstract}
-
-\keywords{Grassmannian manifolds, subspace clustering, approximate nearest neighbor search, vector databases, RAG, IVF}
 
 \begin{document}
 \setcitestyle{numbers,sort,nocompress}
@@ -83,367 +89,343 @@ Retrieval-augmented generation (RAG) indexes dense embeddings using partition-ba
 \section{Introduction}
 \label{sec:intro}
 
-Modern RAG pipelines embed passages into $\mathbb{R}^m$ and search with graph- or partition-based ANN: HNSW~\cite{malkov2018hnsw}, FAISS IVF/PQ~\cite{johnson2019faiss,douze2024faiss,jegou2011product}, NSG~\cite{fu2019nsg}. The geometry is Euclidean by construction: embedders are trained with contrastive objectives in that space~\cite{reimers2019sbert,neelakantan2022ada,wang2022gte}.
+Retrieval-augmented generation embeds passages into $\mathbb{R}^m$ and retrieves them with an approximate nearest neighbor index~\cite{lewis2020rag,karpukhin2020dpr}. The workhorse partition index is inverted-file search: $k$-means assigns each document to a cluster, and a query probes the clusters whose centroids are closest~\cite{sivic2003video,jegou2011product}. Production systems add product quantization inside the lists~\cite{jegou2011product,ge2014opq,kalantidis2014lopq}, graph navigation~\cite{malkov2018hnsw,fu2019nsg}, or both, as implemented in FAISS~\cite{johnson2019faiss,douze2024faiss} and related libraries~\cite{guo2020scann,wang2021graphann}.
 
-An attractive alternative intuition says: semantic categories are better modeled as \emph{linear subspaces} than as point clouds, so the Grassmannian $\grass$, representing the manifold of $k$-planes in $\mathbb{R}^m$~\cite{edelman1998grassmannian,absil2004riemannian}, should improve coarse routing. Grassmannian clustering is a mature literature~\cite{elhamifar2013sparse,vidal2011subspace,liu2016lrr,harandi2014grassmann,hu2018survey,wang2019grassmannian}, and subspace indexing models exist for vision~\cite{turaga2011statistical}. While approximate nearest subspace search~\cite{basri2011approximate} and Grassmannian hashing~\cite{wang2013fast} have been studied for general manifold search, their application as coarse routers in modern RAG vector indices remains largely unexplored. What is missing for RAG is not another geometric formalism, but an empirical answer to four questions:
+Centroid routing uses one vector per cluster. Contrastive text embeddings are anisotropic: a few directions carry much more variance than an isotropic cloud would~\cite{ethayarajh2019contextual}. With 32 clusters, the top 16 of 384 principal directions inside a cluster capture \ExplainedLo\% to \ExplainedHi\% of the within-cluster variance across our dataset and embedder pairs. An isotropic cluster would put about 4\% of the variance in any 16 directions ($16/384$). The question in this paper is whether that shape is a useful coarse-routing signal, once the partition is held fixed.
+
+Subspace clustering and Grassmannian geometry are a mature literature~\cite{elhamifar2013sparse,vidal2011subspace,liu2013lrr,wang2014lrr,cetingul2009intrinsic,zhang2018grassmannian}. Approximate nearest-subspace search~\cite{basri2011approximate} and Grassmannian hashing~\cite{wang2013fast} address a related geometric problem for sets that really are subspaces. They have not been measured as routers for single-vector dense retrieval. We measure three scores on one shared partition:
 
 \begin{enumerate}
-  \item Do RAG embedding clusters exhibit low-rank subspace structure beyond a random baseline?
-  \item Given the same partition, does standard Grassmannian routing beat centroid IVF for single-vector queries?
-  \item How can we resolve the geometric mismatch of linear Grassmannian routing to capture cluster offsets, and does this extension beat traditional centroids?
-  \item When, if ever, does the subspace stage earn its SVD cost?
+  \item Is linear Grassmannian routing, the angle between the query and a through-origin subspace, competitive with centroid IVF?
+  \item Do local principal directions add routing signal beyond the centroid, and does the gain grow with the number of directions $k$?
+  \item Does that gain survive a compute-matched comparison, an end-task nDCG evaluation, and standard ANN baselines?
+  \item What predicts the gain, and can the bases be stored cheaply?
 \end{enumerate}
 
 \paragraph{Contributions.}
-(1)~A minimal two-level Grassmannian index (cluster $\rightarrow$ fit PCA subspace $\rightarrow$ route by principal-angle distance $\rightarrow$ refine by cosine) that isolates routing geometry from partition quality, which we analyze and extend with a consistent \emph{$k$-flat residual routing} formulation to capture cluster offsets.
-(2)~A planted-subspace positive control serving as a geometric sanity check, showing standard Grassmannian routing wins under an \emph{oracle} partition and loses under $k$-means, whereas $k$-flat residual routing achieves robust performance under both.
-(3)~A SciFact~\cite{thakur2021beir} measurement with MiniLM embeddings showing that clusters have a mild rank structure, standard Grassmannian does not beat centroids, but $k$-flat residual routing recovers centroid parity and yields a modest gain (to $\AffineRecall{}\%$ neighbor recall@10).
-(4)~An honest characterization showing that this recall improvement is primarily a metric effect (consistent Euclidean scoring under $k$-means) rather than a high-dimensional subspace phenomenon, providing a clear recommendation for database engineers.
+(1)~A controlled comparison of three routers that share one $k$-means partition (cosine centroid, linear Grassmannian, affine $k$-flat residual), on 6 BEIR datasets, 2 embedders, 5 seeds, $C \in \{16,32,64,128,256\}$, and $P \in \{1,\ldots,64\}$ with $P \le C$.
+(2)~Evidence that the $k$-flat gain comes from local principal directions: $k = 0$ (Euclidean distance to the centroid) is worse than cosine, and the mean gain increases with $k$.
+(3)~An explicit cost account (routing FLOPs, scan FLOPs, single-thread latency, memory) and comparisons with compute-matched IVF and with FAISS IVF-Flat, IVF-PQ, and HNSW.
+(4)~End-task nDCG@10 against BEIR qrels. At a fixed scan budget the relevance gain is larger, and more consistent, than the neighbor-recall gain.
+(5)~A mechanism note: per-cluster explained variance, a sufficient condition for probing the cluster that holds a true neighbor, and the probabilistic-PCA reading of the same residual; plus cheap storage variants (fp16 and int8 bases, one shared basis, adaptive $k$).
 
-\paragraph{Framing and scope.}
-The primary value of this work lies in its role as an exploratory study and a rigorous negative-results paper. We do not present a new production-ready RAG indexing method; instead, our contribution is mapping the empirical limits of standard Grassmannian geometry on modern contrastive embeddings, showing precisely where and why this elegant mathematical abstraction fails, and highlighting the role of local PCA residuals as classical metric alignment controls rather than a novel indexing solution.
+This is an empirical characterization with a cost account. It is not a claim that $k$-flat routing replaces a graph index, and it is not a claim that the score wins once routing arithmetic is charged on a small corpus.
 
 \section{Preliminaries}
 \label{sec:prelim}
 
-A point of $\grass$ is a $k$-dimensional linear subspace of $\mathbb{R}^m$, represented by an orthonormal basis $U\in\mathbb{R}^{m\times k}$ up to right-orthogonal transforms~\cite{edelman1998grassmannian}. Principal angles $\theta_i$ between subspaces $\mathcal{U},\mathcal{V}$ satisfy $\cos\theta_i=\sigma_i(U^\top V)$. We use the geodesic distance
+A point of the Grassmannian $\mathrm{Gr}(k,\mathbb{R}^m)$ is a $k$-dimensional linear subspace of $\mathbb{R}^m$, represented by an orthonormal basis $U \in \mathbb{R}^{m \times k}$ up to right-orthogonal transforms~\cite{edelman1998grassmannian,absil2004riemannian}. Principal angles $\theta_i$ between subspaces with bases $U$ and $V$ satisfy $\cos\theta_i = \sigma_i(U^\top V)$. The squared geodesic distance is
 \begin{equation}
-  d_{\mathrm{geo}}^2(\mathcal{U},\mathcal{V})=\sum_{i=1}^{k}\theta_i^2.
+  d_{\mathrm{geo}}^2(\mathcal{U},\mathcal{V}) = \sum_{i=1}^{k} \theta_i^2.
+  \label{eq:geo}
 \end{equation}
-A single query vector $q$ is treated as a $1$-plane $\mathrm{span}\{q/\|q\|\}$. Its geodesic distance to a $k$-plane $U$ reduces to the angle between $q$ and its projection onto $U$:
+A query vector is a point. Treated as a one-dimensional subspace it has a single principal angle with a $k$-plane, so the geodesic distance reduces to
 \begin{equation}
-  d_{\mathrm{geo}}(q,U)=\arccos\!\big(\|U^\top q\|_2/\|q\|_2\big)
+  d_{\mathrm{geo}}(q, U) = \arccos\big(\|U^\top q\|_2 / \|q\|_2\big).
+  \label{eq:queryangle}
 \end{equation}
-(with $k{=}1$ in the query factor). This is the natural ``does $q$ lie near this subspace?'' score. For a detailed mathematical and computational guide to Grassmann manifold geometry, readers may refer to the handbook by Bendokat et al.~\cite{bendokat2024handbook}, and for broader application contexts, the survey on Grassmannian learning by Zhang et al.~\cite{zhang2018grassmannian}. When representing and clustering databases of subspaces, defining appropriate manifold-aware operations is crucial. Finding the representative mean or median of a set of subspaces on the Grassmannian is treated in Marrinan et al.~\cite{marrinan2014finding}, and the general framework of subspace quantization on the Grassmannian is developed in Stiverson et al.~\cite{stiverson2020subspace}.
+Bendokat, Zimmermann, and Absil survey the computational geometry~\cite{bendokat2024handbook}; Zhang et al.\ survey Grassmannian learning~\cite{zhang2018grassmannian}. We use \eqref{eq:queryangle} only as the linear-subspace router. The router that helps is an affine flat, which does not live on this Grassmannian.
 
-\subsection{Connection to Fusion Frames}
-\label{subsec:fusion-frames}
-
-The Grassmannian subspace representation is mathematically linked to the theory of \emph{fusion frames}~\cite{casazza2008fusion}, which generalize standard frames to collections of subspaces. A fusion frame $\{(\mathcal{W}_c, v_c)\}_{c=1}^C$ consists of a collection of closed subspaces $\mathcal{W}_c \subset \mathbb{R}^m$ and associated positive weights $v_c > 0$ such that the weighted sum of projection operators satisfies a frame inequality:
-\begin{equation}
-  A \|x\|_2^2 \le \sum_{c=1}^{C} v_c^2 \|P_{\mathcal{W}_c} x\|_2^2 \le B \|x\|_2^2
-\end{equation}
-for positive constants $A, B > 0$, where $P_{\mathcal{W}_c} = U_c U_c^\top$ is the orthogonal projection onto $\mathcal{W}_c$. When all subspaces have equal dimension $k$ and the frame bounds are tight ($A = B$), the collection behaves as an optimal overcomplete representation of $\mathbb{R}^m$. Historically valued in signal processing for robust reconstruction under distributed sensing noise~\cite{casazza2008fusion}, fusion frames offer a theoretical framework for subspace indexing: if database clusters were true low-rank subspaces, the set of routing projectors would constitute a highly robust and noise-resilient representation. In the following sections, we empirically test whether standard contrastive embeddings exhibit the clustering geometry required to leverage these theoretical properties.
-
-\section{Method: Two-Level Grassmannian Index}
+\section{Method}
 \label{sec:method}
 
-Figure~\ref{fig:pipeline} summarizes the pipeline. We deliberately share the \emph{same} document partition across routing variants so that differences isolate geometry, not clustering.
+Figure~\ref{fig:pipeline} shows the pipeline. Every router sees the same document partition, so the comparison isolates the score.
 
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
-\resizebox{0.7\textwidth}{!}{%
 \begin{tikzpicture}[
   font=\scriptsize,
-  node distance=0.22cm and 0.18cm,
-  box/.style={draw, rounded corners=2pt, align=center, inner sep=2.4pt, minimum height=0.65cm, text width=1.55cm},
+  node distance=0.28cm and 0.22cm,
+  box/.style={draw, rounded corners=2pt, align=center, inner sep=2.6pt, minimum height=0.72cm, text width=2.15cm},
   arr/.style={-{Latex}, thick}
 ]
-  \node[box, fill=euclid] (emb) {corpus\\embeddings};
-  \node[box, fill=euclid, right=of emb] (km) {$k$-means\\partition};
-  \node[box, fill=grassbg, right=of km] (fit) {fit PCA\\subspace $U_c$};
-  \node[box, fill=grassbg, right=of fit] (route) {route by\\$d_{\mathrm{geo}}$};
-  \node[box, fill=euclid, right=of route] (ref) {cosine\\refine};
-  \draw[arr] (emb)--(km); \draw[arr] (km)--(fit);
-  \draw[arr] (fit)--(route); \draw[arr] (route)--(ref);
-  \node[box, fill=euclid, below=0.55cm of fit] (cent) {route by\\centroid cos};
-  \draw[arr, dashed] (km)|-(cent);
-  \draw[arr, dashed] (cent)-|(ref);
-\end{tikzpicture}%
-}
-\caption{Shared partition; two routers. Solid: Grassmannian. Dashed: centroid IVF control.}
+  \node[box, fill=euclid] (emb) {L2-normalized\\embeddings};
+  \node[box, fill=euclid, right=of emb] (km) {MiniBatch\\$k$-means};
+  \node[box, fill=euclid, right=of km] (mu) {member mean $\mu_c$\\and $\bar\mu_c$};
+  \node[box, fill=flatbg, below=0.45cm of mu] (flat) {$k$-flat residual\\$d_{\mathrm{flat}}(q,F_c)$};
+  \node[box, fill=grassbg, left=0.15cm of flat] (lin) {linear angle\\$\arccos\|U_c^\top q\|$};
+  \node[box, fill=euclid, right=0.15cm of flat] (cos) {cosine to\\$\bar\mu_c$};
+  \node[box, fill=euclid, below=0.55cm of flat] (ref) {exact cosine\\on $P$ clusters};
+  \draw[arr] (emb)--(km); \draw[arr] (km)--(mu);
+  \draw[arr] (mu)--(flat); \draw[arr] (mu)--(lin); \draw[arr] (mu)--(cos);
+  \draw[arr] (flat)--(ref); \draw[arr] (lin)--(ref); \draw[arr] (cos)--(ref);
+\end{tikzpicture}
+\caption{One shared partition, three routers, one exact cosine second stage.}
 \label{fig:pipeline}
-\end{figure*}
+\end{figure}
 
-\paragraph{Build.}
-Partition $N$ normalized embeddings into $C$ clusters (MiniBatch $k$-means, or an oracle labeling in the synthetic study). For each cluster $c$, let $\mu_c \in \mathbb{R}^m$ be the unnormalized cluster mean. We center the cluster members by subtracting $\mu_c$ and take the top-$k$ right singular vectors of the centered data as the orthonormal basis $U_c\in\mathbb{R}^{m\times k}$. For routing, we store both the original unnormalized mean $\mu_c$ (which models the cluster offset) and its normalized counterpart $\hat{\mu}_c = \mu_c / (\|\mu_c\|_2 + 1e-12)$ (which models the centroid direction).
-
-\paragraph{Query.}
-Given $q$ and probe budget $P$: score every cluster by either $d_{\mathrm{geo}}(q,U_c)$ (Grassmannian), $-\langle q,\hat{\mu}_c\rangle$ (centroid cosine), or $d_{\mathrm{flat}}(q, U_c)$ ($k$-flat residual); open the $P$ best clusters; return the top-$K$ cosine neighbors inside the probed union.
-
-\subsection{$k$-Flat Residual Routing (Formerly Affine Grassmannian)}
-\label{subsec:kflat-routing}
-
-Standard linear Grassmannian routing treats the query $q$ as a 1D subspace passing through the origin and measures the principal angles to the linear subspace $U_c$. While elegant, this contains a major geometric inconsistency: the subspaces $U_c$ are fit via SVD on the \emph{centered} cluster data ($X_c = X[idx] - \mu_c$), meaning they are linear approximations of an \emph{affine} flat. Standard Grassmannian routing projects uncentered queries onto these centered directions, which discards the cluster's location (its centroid offset $\mu_c$) and treats the conical structure of contrastive embeddings incorrectly.
-
-To resolve this mismatch, we evaluate $k$-flat residual routing, which can also be interpreted as affine subspace routing. For each cluster $c$, we first center the normalized query $q$ by subtracting the unnormalized cluster mean $\mu_c$:
+\paragraph{Partition and bases.}
+Documents and queries are L2-normalized at encode time. MiniBatch $k$-means (batch size 1024, \texttt{n\_init} 3) assigns documents to $C$ clusters. For cluster $c$, $\mu_c \in \mathbb{R}^m$ is the mean of its members, recomputed from the labels. An empty cluster falls back to the $k$-means center. The normalized centroid used by cosine IVF is
 \begin{equation}
-  q_c = q - \mu_c.
+  \bar\mu_c = \mu_c / \|\mu_c\|_2.
 \end{equation}
-We then compute the projection of $q_c$ onto the linear subspace $U_c$. The squared distance from $q_c$ to the subspace $U_c$ is:
+$U_c \in \mathbb{R}^{m \times k}$ holds the top-$k$ right singular vectors of the centered members. Write $\mathcal{W}_c = \mathrm{span}(U_c)$ and $F_c = \mu_c + \mathcal{W}_c$ for the affine flat. At $C \le 64$ we fit $k \in \{4,8,16,32\}$. At $C \in \{128,256\}$ we fit $k \in \{8,16,32\}$. The linear Grassmannian router and the PPCA router are run only at $C \in \{16,32,64\}$, with $k = 8$ and $k = 16$ respectively.
+
+\paragraph{Three routers.}
+All three emit a score per cluster. We probe the $P$ smallest scores, then return the exact cosine top-10 inside the union of those clusters. For a unit query $q$,
+\begin{align}
+  s_c^{\mathrm{cos}}(q) &= -\langle q, \bar\mu_c \rangle, \label{eq:cosine} \\
+  s_c^{\mathrm{lin}}(q) &= \arccos\big(\|U_c^\top q\|_2\big), \label{eq:grass} \\
+  s_c^{\mathrm{flat}}(q)^2 &= \|q - \mu_c\|_2^2 - \|U_c^\top (q - \mu_c)\|_2^2. \label{eq:kflat}
+\end{align}
+Equation~\eqref{eq:kflat} is the squared Euclidean distance from $q$ to $F_c$, written $d_{\mathrm{flat}}(q, F_c)^2$. Ranking by the square preserves order. At $k = 0$ the same expression is $\|q - \mu_c\|_2^2$, Euclidean distance to the raw mean. Because $\|\mu_c\|_2$ varies across clusters, that ranking is different from cosine-to-$\bar\mu_c$. If both vectors were unit length, squared Euclidean distance and cosine would induce the same order.
+
+The $k$-flat residual is a classical construction: $k$-plane clustering~\cite{bradley2000kplane}, local PCA~\cite{kambhatla1997localpca}, and mixtures of probabilistic PCA~\cite{tipping1999ppca,tipping1999mppca} all score points by distance to an affine subspace. Locally optimized product quantization uses a per-cluster rotation for a different purpose, quantization rather than routing~\cite{kalantidis2014lopq}. We do not introduce the geometry. We measure it as a router against centroid IVF on the same partition.
+
+\paragraph{PPCA ablation.}
+As a fourth score we use the negative log-likelihood of a probabilistic PCA model per cluster~\cite{tipping1999ppca,tipping1999mppca}, with $k = 16$. Let $z_c = U_c^\top(q - \mu_c)$, let $\lambda_{c,j}$ be the corresponding sample eigenvalues, and let $\sigma_c^2$ be the mean of the discarded eigenvalues,
+\[
+  \sigma_c^2 = \big(\textstyle\sum_j \lambda_{c,j}^{\mathrm{all}} - \sum_{j \le k} \lambda_{c,j}\big) / (m - k).
+\]
+The score, up to the additive $\tfrac{m}{2}\log 2\pi$ term shared by every cluster, is
 \begin{equation}
-  d_{\mathrm{flat}}^2(q, \mathcal{W}_c) = \|q_c\|_2^2 - \|U_c^\top q_c\|_2^2 = \|q - \mu_c\|_2^2 - \|U_c^\top (q - \mu_c)\|_2^2.
+\begin{aligned}
+  s_c^{\mathrm{ppca}}(q)
+  &= \tfrac12 \sum_{j=1}^{k} \log \lambda_{c,j}
+   + \tfrac12 (m-k)\log\sigma_c^2 \\
+  &\quad + \tfrac12 \sum_{j=1}^{k} \frac{z_{c,j}^2}{\lambda_{c,j}}
+   + \tfrac12 \frac{\|q-\mu_c\|_2^2 - \|z_c\|_2^2}{\sigma_c^2}
+   - \log(n_c / N).
+\end{aligned}
+\label{eq:ppca}
 \end{equation}
-The score $s_c$ is defined as the square root of this value:
+The last term is a log prior proportional to cluster size. Up to cluster-dependent constants, the $k$-flat residual is the Mahalanobis term of this likelihood in the limit where the retained eigenvalues are much larger than $\sigma_c^2$. The full likelihood, with the log-determinant and the prior, is the ablation. It does worse than cosine IVF.
+
+\paragraph{Cost model.}
+Brute-force inner-product search costs $Nm$ FLOPs per query. Cosine and Euclidean routing cost $Cm$ FLOPs. The $k$-flat score costs $Cm(k+1)$ after precomputing $U_c^\top \mu_c$, because the residual projection is an extra matrix-vector product of width $k$. Scanning the probed documents costs $n_{\mathrm{cand}}\, m$ FLOPs. Extra memory for the bases is $Cmk$ floats, or $Cmk$ bytes plus $Ck$ scales if each basis vector is stored in int8. We report two budgets as a fraction of $Nm$: total cost (routing plus scan) and scan cost alone. Scan cost is the large-corpus proxy, in which scoring $C$ centroids is small next to scanning candidates. On the corpora here, $C/N$ is not small, so the two budgets disagree. That disagreement is a result, not a nuisance.
+
+\section{Why local directions help, and why they might not}
+\label{sec:why}
+
+Let $s_c(q) = \mathrm{dist}(q, F_c)$. Distance to a set is 1-Lipschitz, so for any document $x$ assigned to cluster $c$,
 \begin{equation}
-  s_c = d_{\mathrm{flat}}(q, \mathcal{W}_c) = \sqrt{\max\big(0, \|q - \mu_c\|_2^2 - \|U_c^\top (q - \mu_c)\|_2^2\big)}.
+  s_c(q) \le \|q - x\|_2 + \mathrm{dist}(x, F_c).
+  \label{eq:lip}
 \end{equation}
-This distance is mathematically equivalent to the **PCA reconstruction residual** to the local flat $\mu_c + \mathrm{span}(U_c)$. It is a classic construction with rich roots in k-plane/k-flat clustering~\cite{bradley2000kplane}, local PCA~\cite{kambhatla1997localpca}, mixtures of probabilistic principal component analyzers~\cite{tipping1999ppca}, and locally optimized product quantization~\cite{kalantidis2014lopq}. 
-
-Note that when $k=0$, the score $s_c$ reduces exactly to the Euclidean distance $\|q - \mu_c\|_2$ to the original unnormalized cluster mean. Crucially, we must distinguish this unnormalized mean $\mu_c$ from the normalized direction $\hat{\mu}_c$. If we were to use the normalized centroid direction $\hat{\mu}_c$ for Euclidean routing, then because both $q$ and $\hat{\mu}_c$ are unit-length, their squared Euclidean distance would expand to:
+Because $\mathrm{dist}(x, F_c) \le \|x - \mu_c\|_2$, the cluster that holds a true neighbor $x$ has a score bound that is never looser than the corresponding centroid bound. Averaged over the cluster,
 \begin{equation}
-  \|q - \hat{\mu}_c\|_2^2 = \|q\|_2^2 + \|\hat{\mu}_c\|_2^2 - 2 q^\top \hat{\mu}_c = 2 - 2 \langle q, \hat{\mu}_c \rangle.
+  \mathbb{E}[\mathrm{dist}(x, F_c)^2] = \big(1 - \rho_c(k)\big)\, \mathbb{E}[\|x - \mu_c\|_2^2],
+  \label{eq:rho}
 \end{equation}
-In this case, Euclidean and cosine routing would produce mathematically identical cluster rankings. However, because we retain the unnormalized mean $\mu_c$ (whose length $\|\mu_c\|_2 < 1$ varies across clusters according to the density and dispersion of each cluster), the Euclidean distance $\|q - \mu_c\|_2$ is not monotonically equivalent to the cosine similarity $\langle q, \hat{\mu}_c \rangle$, creating a distinct ranking behavior.
+where $\rho_c(k)$ is the fraction of within-cluster variance captured by the top-$k$ principal directions. For a PCA basis fit on the cluster's own members this is an identity, not a model.
 
-Because standard $k$-means partitioning minimizes the Euclidean distance to unnormalized centroids, $k$-flat residual routing is fully consistent with the partition geometry at $k=0$. In contrast, standard centroid IVF evaluates cosine similarity $-\langle q, \hat{\mu}_c \rangle$ on normalized centroids, introducing a metric mismatch against the underlying partitioning. By keeping $k>0$, the router captures both the Euclidean cluster centroid shift $\mu_c$ and local cluster anisotropy modeled by $U_c$.
+A sufficient condition for probing the cluster $c^\star$ that contains a true neighbor $x$ is that fewer than $P$ other clusters $c'$ satisfy
+\begin{equation}
+  s_{c'}(q) < \|q - x\|_2 + \mathrm{dist}(x, F_{c^\star}).
+  \label{eq:sufficient}
+\end{equation}
+Two caveats keep this from being a guarantee. Other clusters' scores also shrink as $k$ grows, and the flat is unbounded along $U_c$, so a far query can still fall close to a flat it does not belong to. The identity does predict that the gain should increase with $\rho_c(k)$. Section~\ref{sec:mech} tests that correlation. With twelve pairs it is suggestive at best.
 
-\paragraph{Complexity notes.}
-Complexity per query is $O(C\,mk)$ for Grassmannian and $k$-flat residual scores vs.\ $O(C\,m)$ for centroids, plus $O(m\cdot n_{\mathrm{probed}})$ for refinement.
-
-\paragraph{Algorithm (query).}
-\begin{enumerate}
-  \item Normalize $q\leftarrow q/\|q\|_2$.
-  \item For each cluster $c=1{\ldots}C$: set $s_c \leftarrow \arccos(\|U_c^\top q\|_2)$ (Grassmannian), $s_c\leftarrow -\langle\hat{\mu}_c,q\rangle$ (centroid), or $s_c\leftarrow d_{\mathrm{flat}}(q, U_c)$ ($k$-flat residual).
-  \item Let $\mathcal{P}$ be the $P$ clusters with smallest $s_c$.
-  \item Return $\mathrm{arg\,top}\text{-}K\{\langle x_i,q\rangle:i\in\bigcup_{c\in\mathcal{P}}\mathrm{members}(c)\}$.
-\end{enumerate}
-
-\paragraph{Complexity analysis.}
-Build cost is dominated by $k$-means plus one thin SVD per cluster, $O(N m T + C\cdot n_c m k)$ with $T$ $k$-means iterations and $n_c$ the cluster size. At query time the Grassmannian and $k$-flat routers pay an extra factor of $k$ over centroids. Approximate Grassmann kernels via random features~\cite{huang2015grassmannian} or recent advancements in random features for Grassmannian kernels~\cite{delogne2025random,delogne2026bounded} could reduce that, but only matter if the router is more accurate, which is the empirical question addressed below.
-
-\section{Experimental Setup}
+\section{Experimental setup}
 \label{sec:setup}
 
-\paragraph{Positive control.}
-We construct a deliberate positive control where each cluster is generated from origin-centered subspaces: we plant $20$ random $4$-planes in $\mathbb{R}^{64}$, sample $80$ noisy points per plane ($\sigma{=}0.15$), and issue one query near each plane. By design, the cluster centroids concentrate near the origin, meaning that centroid-based routing contains zero useful signal. This setup is not representative of real-world contrastive embeddings, but serves as a crucial geometric sanity check to verify that our implementation of pure linear Grassmannian routing works correctly when its structural assumptions are perfectly matched. We evaluate both standard $k$-means partitions and an oracle partition using the planted labels.
+\paragraph{Corpora.}
+We use BEIR test splits from the Hugging Face BeIR mirrors~\cite{thakur2021beir,wadden2020scifact}. The subsample is deterministic (seed 0): keep every test query that has at least one relevant document, cap the query set at 500 by uniform sampling, keep every document judged relevant for a kept query, then fill with uniformly sampled other documents up to 30{,}000. Document text is title, a period, and a space, then the body, truncated to 3{,}000 characters. The encoder's maximum sequence length is 256 tokens. Table~\ref{tab:data} lists the slices. FiQA keeps 1{,}316 judged documents and 28{,}684 random ones. TREC-COVID keeps 17{,}537 judged documents out of 30{,}000, so that slice is relevance-dense and its nDCG is not comparable to published full-corpus numbers.
 
-\paragraph{SciFact.}
-We embed the BEIR SciFact corpus and test queries~\cite{thakur2021beir} with \texttt{all-MiniLM-L6-v2}~\cite{reimers2019sbert} ($m{=}384$), keeping qrels-covered documents ($\SciNDocs{}$ passages, $\SciNQueries{}$ queries). Embeddings are $\ell_2$-normalized.
+\input{generated/table_data.tex}
 
-\paragraph{Metrics.}
-(i)~Neighbor recall@10 against exact cosine top-10 (isolates routing fidelity).
-(ii)~Relevance recall@10 from SciFact qrels.
-(iii)~Mean probed fraction and query latency.
-(iv)~Structure: per-cluster PCA rank at $90\%$ energy, participation ratio, mean intra-cluster principal angle, and mean inter-cluster geodesic, compared to size-matched Gaussian baselines.
+\paragraph{Embedders.}
+We encode with \texttt{sentence-transformers/all-MiniLM-L6-v2}~\cite{reimers2019sbert,wang2020minilm} and \texttt{BAAI/bge-small-en-v1.5} with its query instruction~\cite{xiao2023cpack}. Both are 384-dimensional and L2-normalized. The twelve pairs are the cross of these two models with the six datasets. \texttt{intfloat/e5-small-v2}~\cite{wang2022e5} and \texttt{bge-base-en-v1.5} were not run.
 
-\paragraph{Grids.}
-$C\in\{16,32,64\}$, $k\in\{4,8,16\}$, $P\in\{1,2,4,8\}$. Primary SciFact comparison: $C{=}32$, $k{=}8$, $P{=}4$.
+\paragraph{Metrics and uncertainty.}
+Neighbor recall@10 is computed against the exact cosine top-10. nDCG@10 uses BEIR qrels with gains $2^{\mathrm{rel}}-1$, on the top-10 after exact cosine re-ranking of the probed union. We also record the fraction of the corpus scanned, routing and scan FLOPs, and, for the FAISS comparison only, single-thread per-query latency (median of three passes, batch size 1). For each query we average a metric over the five $k$-means seeds, then take a 95\% percentile bootstrap over queries (2{,}000 resamples). Differences versus cosine IVF are paired. Headline means are the unweighted mean of the twelve pair-level differences, so TREC-COVID's 50 queries do not dominate SciDocs' 500, and they also do not disappear.
+
+\paragraph{What was fit.}
+$C \in \{16,32,64,128,256\}$ and $P \in \{1,2,4,8,16,32,64\}$ with $P \le C$. The linear Grassmannian router ($k = 8$), the PPCA router ($k = 16$), and $k = 4$ were evaluated only at $C \in \{16,32,64\}$. Seeds are 0 through 4. The primary slice in the text is $C = 32$, $P = 4$.
 
 \section{Results}
 \label{sec:results}
 
-\subsection{Structure: mild, not dramatic}
+\subsection{Equal clusters and probes}
+\label{sec:equal}
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=0.9\textwidth]{figures/fig_structure.png}
-\caption{Effective dimension and subspace angles for $k$-means clusters vs.\ size-matched random vectors.}
-\label{fig:structure}
-\end{figure*}
+Table~\ref{tab:routers} is the average over the twelve pairs at $C = 32$, $P = 4$. The linear Grassmannian gap is \GrassR{} recall points and \GrassN{} nDCG points, and the recall interval is below zero on all \GrassDn{} pairs. The through-origin subspace throws away $\mu_c$. Euclidean distance to $\mu_c$ ($k = 0$) is also worse than cosine: \KZeroR{} recall points, recall interval below zero on \KZeroDn{} of 12 pairs, and above zero on none. A change of metric, from cosine to Euclidean, does not explain a gain that $k = 0$ does not have.
 
-Figure~\ref{fig:structure} and Table~\ref{tab:structure} summarize structure. On SciFact, mean rank@90\% energy is $\SciRank{}$ versus $\SciRandRank{}$ for random vectors of the same cluster sizes, representing a reduction but not a collapse to a handful of dimensions. Intra-cluster principal angles ($\SciIntra{}$~rad) remain large; clusters are diffuse blobs, not tight $k$-flats. The synthetic control shows clearer structure under the planted geometry, as expected.
+The $k$-flat mean then rises with $k$. Recall gaps are \KFourR, \KEightR, \KSixteenR, and \KThirtyTwoR{} points at $k = 4, 8, 16, 32$. nDCG gaps are \KFourN, \KEightN, \KSixteenN, and \KThirtyTwoN. At $k = 16$ the recall interval is above zero on \KSixteenUp{} pairs and below zero on \KSixteenDn. The nDCG interval is above zero on only \KSixteenNUp{} pairs. At $k = 32$ those recall and nDCG counts are \KThirtyTwoUp{} and \KThirtyTwoNUp. The average is monotonic in $k$. Individual pairs are not: the $k = 16$ recall point estimate is negative for FiQA with BGE ($-0.6$) and for TREC-COVID with MiniLM ($-0.6$), and both intervals include zero (Table~\ref{tab:perpair}). $k = 4$ is a wash on recall (higher on \KFourUp{} pairs, lower on \KFourDn).
 
-\begin{table}[t]
-\centering
-\caption{Cluster structure (mean over clusters). Lower rank / intra-angle than random supports a subspace hypothesis.}
-\label{tab:structure}
-\small
-\begin{tabular}{lrrrr}
-\toprule
-\textbf{Data} & \textbf{Rank@90} & \textbf{Rand.} & \textbf{Intra $\theta$} & \textbf{Inter geo} \\
-\midrule
-SciFact MiniLM & $\SciRank{}$ & $\SciRandRank{}$ & $\SciIntra{}$ & $\SciInter{}$ \\
-Synthetic plant & $\SynRank{}$ & $\SynRandRank{}$ & --- & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
+The same pattern appears at other operating points, with a larger equal-$P$ gap when the clusters are finer and the probe count is still small: at $C = 64$, $P = 4$, $k = 16$ the mean gaps are \KSixteenAtCSixtyFourR{} recall points and \KSixteenAtCSixtyFourN{} nDCG points, with the recall interval above zero on \KSixteenAtCSixtyFourUp{} of 12 pairs. At $C = 256$, $P = 16$ they are \KSixteenAtCTwoFiveSixR{} and \KSixteenAtCTwoFiveSixN{}, with the recall interval above zero on all \KSixteenAtCTwoFiveSixUp{} pairs. That growth with $k$ is not in every cell of the grid: at $C = 256$ the $k = 32$ recall mean sits below the $k = 16$ mean (Table~\ref{tab:kcurve}). Figure~\ref{fig:kcurve} plots the mean curves and the twelve pair-level curves at $P = 4$. Figure~\ref{fig:scan} plots recall against the fraction scanned, and Figure~\ref{fig:scanndcg} is the same plot for nDCG@10. On that scale cosine and $k$-flat nearly overlap, which is the right visual for a one-to-two-point gap, while linear Grassmannian routing stays far below. The PPCA likelihood is worse than cosine on recall (\PpcaR{} points; recall interval below zero on \PpcaDn{} pairs and above zero on \PpcaUp). Adding the log-determinant and the cluster-size prior does not improve the residual.
 
-\subsection{Routing Results}
+\input{generated/table_routers.tex}
+
+\input{generated/table_perpair.tex}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\columnwidth]{figures/fig_recall_vs_probe.png}
-\caption{SciFact neighbor recall@10 vs.\ probed fraction ($k$-means partitions).}
-\label{fig:recall}
+\includegraphics[width=\textwidth]{figures/fig_kcurve.pdf}
+\caption{Gap versus cosine IVF at $P = 4$. Lines are unweighted means over the twelve pairs. Faint curves are the individual pairs. $k = 0$ is Euclidean distance to $\mu_c$. The annotation is the recall bootstrap count at $C = 32$, $k = 16$.}
+\label{fig:kcurve}
 \end{figure}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.82\columnwidth]{figures/fig_synthetic.png}
-\caption{Synthetic planted subspaces: recall vs.\ probe (includes $k$-means regimes).}
-\label{fig:synthetic}
+\includegraphics[width=\textwidth]{figures/fig_scan_recall.pdf}
+\caption{Neighbor recall@10 against the fraction of the corpus scanned, for $C = 32$ and $C = 128$. Markers are probe counts $P \in \{1,2,4,8,16,32,64\}$ with $P \le C$. Linear Grassmannian routing was not run at $C = 128$. Cosine and $k$-flat differ by about one to two points on this axis; Figure~\ref{fig:kcurve} resolves that gap.}
+\label{fig:scan}
 \end{figure}
 
-On SciFact at the primary config, centroid IVF reaches $\CentRecall{}\%$ neighbor recall@10 while standard linear Grassmannian routing only reaches $\GrassRecall{}\%$, probing $\CentProbe{}\%$ vs.\ $\GrassProbe{}\%$ of the corpus (Table~\ref{tab:main}). This underperformance highlights the major limitation of standard Grassmannian projection: ignoring cluster offsets in conical embedding structures severely impacts routing accuracy.
-
-Evaluating $k$-flat residual routing successfully resolves this geometric mismatch. By centering the query by the unnormalized cluster mean $\mu_c$ before projecting onto the PCA subspace, it captures both the location and anisotropic spread of the cluster. As shown in Table~\ref{tab:main}, $k$-flat residual routing achieves $\AffineRecall{}\%$ neighbor recall@10, outperforming centroid IVF ($\CentRecall{}\%$). This carries over to downstream relevance recall, where $k$-flat residual yields $\AffineRel{}\%$ (compared to $\CentRel{}\%$ for centroids). 
-
-To isolate whether this $1.6\%$ recall improvement stems from genuine subspace geometry or simply from metric corrections, we run four meticulous controls:
-\begin{enumerate}
-  \item \textbf{Cosine (K-Means Centroid):} Standard cosine similarity routing on Euclidean $k$-means partitions ($\CentRecall{}\%$ neighbor recall).
-  \item \textbf{Euclidean (K-Means Centroid):} Ordinary Euclidean distance routing to unnormalized cluster means (corresponding to $k$-flat residual at $k=0$). This achieves $84.2\%$ neighbor recall and $70.2\%$ relevance recall, showing a minor $0.2\%$ recall bump from aligning the routing metric with the Euclidean $k$-means objective.
-  \item \textbf{Spherical K-Means with Consistent Cosine:} Running spherical $k$-means (clustering with cosine similarity) and routing with centroid cosine similarity. This scores $84.0\%$ neighbor recall and $68.0\%$ relevance recall, demonstrating that altering the clustering metric to be natively cosine does not break the coarse routing barrier.
-  \item \textbf{Effect of Subspace Dimension $k$:} Evaluating $k$-flat residual routing across several dimensions $k \in \{0, 1, 2, 4, 8\}$. As illustrated in the dimension ablation (Figure~\ref{fig:ablation}, left), the recall curve transitions from $84.2\%$ at $k=0$ (pure Euclidean distance) to $85.6\%$ at $k=8$ ($k$-flat residual routing). 
-\end{enumerate}
-
-These controls reveal a highly nuanced geometric story. While the unnormalized Euclidean correction ($k=0$) recovers $0.2\%$ recall over standard cosine, adding the local PCA directions ($k=8$) yields an additional $1.4\%$ absolute gain. This demonstrates that while the centroid offset carries the majority of the signaling power, the anisotropic subspace directions captured by $U_c$ do provide a minor but genuine geometric alignment benefit.
-
-In terms of query latency, centroid IVF remains fastest ($\CentMs{}$~ms) due to simple dot products. Pure Euclidean routing takes $0.13$~ms. $k$-flat residual routing requires $\AffineMs{}$~ms, representing a $2\times$ latency overhead due to the projection step ($O(Cmk)$ vs $O(Cm)$ complexity). While both figures are small in absolute terms at this scale (below $1$~ms), this overhead scales linearly with cluster count and dimension, making it a critical trade-off for high-throughput production environments.
-
-\begin{table}[t]
+\begin{figure}[t]
 \centering
-\caption{Primary SciFact comparison ($C{=}32$, $k{=}8$, $P{=}4$, partition $=$ $k$-means unless specified).}
-\label{tab:main}
-\small
-\begin{tabular}{lrrr}
-\toprule
-\textbf{Router / Partitioning Control} & \textbf{Neigh.\ R@10} & \textbf{Rel.\ R@10} & \textbf{ms} \\
-\midrule
-Cosine (K-Means Centroid) & $\CentRecall{}\%$ & $\CentRel{}\%$ & $\CentMs{}$ \\
-Euclidean (K-Means Centroid) & 84.2\% & 70.2\% & 0.13 \\
-Cosine (Spherical K-Means) & 84.0\% & 68.0\% & 0.12 \\
-Linear Grassmannian ($k{=}8$) & $\GrassRecall{}\%$ & $\GrassRel{}\%$ & $\GrassMs{}$ \\
-$k$-Flat Residual Routing ($k{=}8$) & \textbf{\underline{\AffineRecall{}}\%} & \textbf{\underline{\AffineRel{}}\%} & \AffineMs{} \\
-\bottomrule
-\end{tabular}
-\end{table}
+\includegraphics[width=\textwidth]{figures/fig_scan_ndcg.pdf}
+\caption{nDCG@10 against the fraction scanned, same routers and probe grid as Figure~\ref{fig:scan}.}
+\label{fig:scanndcg}
+\end{figure}
 
-The synthetic study clarifies \emph{when} subspace routing can help. Under $k$-means, centroids again dominate (Figure~\ref{fig:synthetic}; $\SynCentRecall{}\%$ vs.\ $\SynGrassRecall{}\%$ at $P{=}2$). Under an \emph{oracle} partition aligned with planted planes, the ordering \emph{reverses}: Grassmannian routing reaches $\SynOracleGrass{}\%$ neighbor recall@10 while centroid routing falls to $\SynOracleCent{}\%$. The query's angle to the true plane is exactly the generative signal, while centroids are non-informative because the means concentrate near the origin. In other words: the geometry works only when the partition is a true subspace partition; unsupervised $k$-means on noisy point samples does not produce one, making linear Grassmannian routing ineffective on real-world clusters.
+\subsection{Compute-matched budgets}
+\label{sec:cost}
 
-\begin{figure*}[t]
+Equal $C$ and $P$ give the routers the same scanned fraction, up to cluster-size imbalance, and they hide the factor of $k+1$ in the routing score. Table~\ref{tab:matched} picks, for each family, the grid point with the best seed-averaged recall inside a budget, and separately the grid point with the best seed-averaged nDCG. The families are cosine IVF over $C$ and $P$, and $k$-flat routing over $C$, $P$, and $k$. Selection uses the evaluation queries. The numbers are envelopes over the grid, not a hyperparameter frozen on a validation split. Both families get the same treatment, so the comparison is still a comparison of envelopes.
+
+With routing FLOPs included, finer cosine IVF wins. At 20\% of brute-force cost the recall gap, k-flat minus cosine, is \TotalTwentyR{} points (k-flat higher on \TotalTwentyRUp{} of 12 pairs, lower on \TotalTwentyRDn). At 10\% that gap is \TotalTenR{} points, again with k-flat higher on none of the pairs. The configurations that fit a tight total budget use a small $k$ and a small $P$, which is the part of the grid where the $k$-flat score has little to offer. At 5\% of brute force, only the six larger slices (FiQA, SciDocs, TREC-COVID, both embedders) have any legal configuration; the gap there is \TotalFiveR{} recall points. At 2\%, no pair has a configuration under the budget.
+
+With scan cost only, the ordering changes. At 10\% of brute force the recall envelope is \ScanTenR{} points (higher on \ScanTenRUp{} pairs, lower on \ScanTenRDn, tied on \ScanTenRTie) and the nDCG envelope is \ScanTenND{} points, higher on all \ScanTenNUp{} pairs. At 5\% of the scan the nDCG gap is \ScanFiveND{} points, again higher on all \ScanFiveNUp{} pairs, while recall is only \ScanFiveR{} points and is lower on \ScanFiveRDn{} pairs. Figure~\ref{fig:cost} shows the same envelopes as curves. The scan-only panel is the regime we would expect on a large corpus, where $C$ is on the order of $\sqrt{N}$ and routing $C$ centroids is negligible next to the scan. We did not measure that regime. The panel is a proxy.
+
+\input{generated/table_matched.tex}
+
+\begin{figure}[t]
 \centering
-\begin{minipage}{0.48\textwidth}
+\includegraphics[width=\textwidth]{figures/fig_cost.pdf}
+\caption{Best seed-averaged metric of each family inside a FLOP budget. Faint curves are individual pairs. The solid curve averages pairs that have at least one legal configuration, and it is drawn only where at least six pairs contribute. Left: routing plus scan, recall. Center: scan only, recall. Right: scan only, nDCG. Selection is on the evaluation queries.}
+\label{fig:cost}
+\end{figure}
+
+\subsection{FAISS baselines and latency}
+\label{sec:ann}
+
+Table~\ref{tab:ann} and Figure~\ref{fig:ann} compare FAISS Flat, IVF-Flat, IVF-PQ, and HNSW with the NumPy routers on the same vectors (seed 0). Table~\ref{tab:ann} is one $k$-means seed, so its $k$-flat recalls are not the five-seed means in Table~\ref{tab:perpair}. HNSW ($M = 32$, $\mathrm{efSearch} = 16$) has higher recall@10 than the NumPy $k = 16$ router ($C = 32$, $P = 4$) on \HnswRecallWins{} of 12 pairs, and lower measured latency on \HnswLatWins{} of 12. The pair that breaks the recall comparison is FiQA with BGE on that seed, where the $k$-flat router reaches 89.8\% recall and HNSW at $\mathrm{efSearch} = 16$ reaches 88.7\%. HNSW is still faster there. The latency comparison is not implementation-matched. FAISS is C++, and our second stage walks cluster slices in Python. The route-only portion of the $k = 16$ score is \RouteUsLo{} to \RouteUsHi{} microseconds, against end-to-end NumPy times of 0.06 to 0.31 ms. A tuned implementation would make both the score and the scan dense linear algebra, and the FLOP model of Section~\ref{sec:cost} is the comparison that survives that rewrite. Under that model, $k$-flat routing is a better coarse router than cosine at fixed scan cost, and a worse use of arithmetic than a finer cosine partition when routing is charged. It is not a better index than HNSW at these scales.
+
+IVF-PQ with 48-byte codes and no refinement loses substantial recall, as expected for a lossy scan. With exact refinement of a short list it tracks IVF-Flat. Those rows are in the released baseline files and in Figure~\ref{fig:ann}; we do not treat PQ as a router.
+
+\input{generated/table_ann.tex}
+
+\begin{figure}[t]
 \centering
-\includegraphics[width=0.85\linewidth]{figures/fig_k_ablation.png}
-\end{minipage}\hfill
-\begin{minipage}{0.48\textwidth}
+\includegraphics[width=\textwidth]{figures/fig_ann.pdf}
+\caption{Recall@10 against single-thread latency (seed 0, batch size 1, median of three passes). HNSW varies $\mathrm{efSearch}$. IVF-Flat varies lists and probes. IVF-PQ includes codes with and without exact refinement. NumPy points are cosine and $k$-flat routers at $C \in \{32, 64\}$. The NumPy points are a Python prototype; FAISS is C++.}
+\label{fig:ann}
+\end{figure}
+
+\subsection{Anisotropy and the gain}
+\label{sec:mech}
+
+Table~\ref{tab:aniso} and Figure~\ref{fig:aniso} compare $\rho(k{=}16)$, the size-weighted fraction of within-cluster variance in the top 16 directions at $C = 32$, with the $k = 16$ gap at $P = 4$. The Spearman correlation with the recall gap is \SpearmanR{} ($p = \SpearmanRp$, $n = 12$). Pearson's correlation is \PearsonR{} ($p = \PearsonRp$). The Spearman correlation with the nDCG gap is \SpearmanN{} ($p = \SpearmanNp$). The recall correlation is not significant at 5\%. The nDCG correlation clears 5\% and still rests on twelve pairs. We treat both as suggestive. They do not confirm the sufficient condition in Section~\ref{sec:why}, and the negative point estimates in Table~\ref{tab:perpair} are a reminder that a tighter bound on the true cluster is not the same thing as winning the arg-sort.
+
+\input{generated/table_aniso.tex}
+
+\begin{figure}[t]
 \centering
-\includegraphics[width=0.85\linewidth]{figures/fig_latency.png}
-\end{minipage}
-\caption{Left: SciFact subspace-dimension ablation ($k$-flat residual routing is nearly flat, showing centroid-dominated performance). Right: latency vs.\ probe.}
-\label{fig:ablation}
-\end{figure*}
+\includegraphics[width=\textwidth]{figures/fig_aniso.pdf}
+\caption{Explained variance at $k = 16$, $C = 32$, against the $k = 16$ gap at $P = 4$. Each point is one dataset and embedder.}
+\label{fig:aniso}
+\end{figure}
 
-Varying $k$ (Figure~\ref{fig:ablation}, left) does not reverse the SciFact ordering: larger subspaces slightly change Grassmannian scores but do not close the gap to centroids. This matches the reduction of query-to-subspace geodesic to a single angle: extra subspace dimensions help only if they capture directions the query actually uses.
+\subsection{Cheap bases}
+\label{sec:cheap}
 
-\subsection{Full SciFact grid}
+Table~\ref{tab:cheap} replaces the fp32 basis with cheaper storage, still at $C = 32$, $P = 4$. fp16 matches fp32 exactly at the reported precision (\CheapFp16DR{} recall points). int8, with a per-vector symmetric scale, changes recall by \CheapIntDR{} points and nDCG by \CheapIntDN{} points. A single basis shared by every cluster, the top principal directions of the pooled within-cluster residuals, is much worse than the per-cluster basis (\CheapSharedDR{} recall points and \CheapSharedDN{} nDCG points at $k = 16$) and worse than cosine. A basis fit on the pooled residuals keeps directions that are shared across clusters and drops directions that are private to one cluster. Per-cluster adaptive $k$, the smallest $k$ that explains a fraction $\tau$ of the cluster variance, raises recall as $\tau$ and the average $k$ rise, and it does not beat a fixed $k = 16$. At $\tau = 0.35$ the average $k$ is \CheapAdK{} and the recall gap versus fp32 $k = 16$ is \CheapAdDR{} points.
 
-Table~\ref{tab:scifact-grid} reports the $C{=}32$ slice. Centroid recall is invariant to $k$ (as expected: $k$ only shapes $U_c$). Linear Grassmannian recall improves with larger $k$ and $P$ but remains below the centroid curve at every matched probe budget. Our proposed $k$-flat residual router, however, consistently outperforms standard centroid cosine across all matching $k$ and $P$ values. For example, at $k{=}8, P{=}4$, $k$-flat residual routing scores $\AffineRecall{}\%$ neighbor recall, representing a $1.6\%$ absolute gain over centroids ($\CentRecall{}\%$) while carrying a moderate latency overhead of $\AffineMs{}$~ms vs.\ $\CentMs{}$~ms.
-
-\begin{table}[t]
-\centering
-\caption{SciFact MiniLM, $C{=}32$: neighbor recall against exact cosine top-10, relevance recall from qrels, probed fraction, and latency.}
-\label{tab:scifact-grid}
-\small
-\setlength{\tabcolsep}{3.5pt}
-\input{generated/table_scifact.tex}
-\end{table}
-
-\subsection{Oracle vs.\ $k$-means on synthetic data}
-
-Table~\ref{tab:synthetic-grid} makes the conditional story quantitative. With planted labels, Grassmannian routing recovers nearly all exact neighbors at $P{=}1$ already ($\SynOracleGrass{}\%$). Centroid routing on the same oracle partition collapses because cluster means are near the origin in a symmetric subspace sample, so cosine-to-mean is weakly informative. Swap the partition for $k$-means and the linear Grassmannian advantage disappears. However, our $k$-flat residual router bridges this gap, exceeding centroids even in the unsupervised $k$-means regime.
-
-\begin{table}[t]
-\centering
-\caption{Synthetic planted $4$-planes ($k{=}4$). Oracle $=$ true subspace labels ($C{=}20$); $k$-means $=$ unsupervised partition ($C{=}16$).}
-\label{tab:synthetic-grid}
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{lrrr}
-\toprule
-\textbf{Setting} & \textbf{$P{=}1$} & \textbf{$P{=}2$} & \textbf{$P{=}4$} \\
-\midrule
-Oracle / Grassmannian (Linear) & 98.0 & 98.0 & 99.5 \\
-Oracle / $k$-Flat Residual & 98.0 & 98.0 & 99.5 \\
-Oracle / Centroid & 21.0 & 36.5 & 36.5 \\
-\midrule
-$k$-means / Centroid & 49.0 & 69.5 & 82.5 \\
-$k$-means / Grassmannian (Linear) & 23.5 & 42.5 & 66.0 \\
-$k$-means / $k$-Flat Residual & \textbf{50.5} & \textbf{71.5} & \textbf{82.5} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\subsection{Takeaways}
-
-\begin{enumerate}
-  \item \textbf{Subspace Structure:} The hypothesis that real RAG clusters possess strong low-rank linear subspace structure is only weakly supported. SciFact clusters are mildly lower-rank than random noise, but behave more like diffuse blobs than tight geometric flats.
-  \item \textbf{Linear Grassmannian Routing:} Standard linear Grassmannian projection is ineffective for single-vector query routing on RAG embeddings due to its complete neglect of cluster offsets, causing it to perform significantly worse than standard centroid IVF.
-  \item \textbf{$k$-Flat Residual Routing:} Projecting centered queries onto local PCA subspaces ($k$-flat residual routing) resolves this offset issue and matches or slightly exceeds centroid IVF in recall. However, this gain is primarily a metric-alignment effect (Euclidean vs. Cosine matching standard $k$-means) rather than a manifestation of subspace structure.
-  \item \textbf{Positive Control Alignment:} Pure linear subspace tools perform exceptionally well when the data genuinely possess origin-centered subspace structure and the partition matches that geometry, showing that the tool works well under its native generative assumptions but can underperform on standard, uncentered vector space clustering.
-\end{enumerate}
+\input{generated/table_cheap.tex}
 
 \section{Discussion}
 \label{sec:discuss}
 
-\paragraph{Why centroids beat standard Grassmannians (and why $k$-flat residual routing recovers parity).}
-A RAG query is a point. Centroid cosine asks ``is this point near the cluster mean?'' Linear Grassmannian routing asks ``does this point lie near the cluster's principal span?'' When clusters are thick ellipsoids around a mean (the typical MiniLM/$k$-means geometry), the mean is highly informative. Standard subspace distance ignores the cluster's offset from the origin and treats all directions in $U_c$ equally, which is the wrong inductive bias for contrastive embeddings concentrated in a conical region.
+Linear subspaces through the origin ignore the cluster offset. On these embeddings the offset is most of the routing signal, which is why Grassmannian routing loses about thirty recall points and why $k = 0$, which keeps the offset and nothing else, is already in the neighborhood of cosine IVF. It is not equal to cosine IVF: the raw mean and the normalized centroid rank clusters differently, and the Euclidean ranking is worse. The gain that appears for $k \ge 8$ is the local principal directions on top of that offset.
 
-Our $k$-flat residual router combines both geometric perspectives: it shifts the query by subtracting the cluster mean before projecting it onto the PCA directions. This is mathematically equivalent to the local-PCA reconstruction error. Our dimension ablation shows that this score is centroid-dominated (recovering standard Euclidean distance to the mean at $k=0$). This explains why it slightly outperforms standard centroid cosine (by correcting the metric mismatch against $k$-means partitioning) while standard linear Grassmannian routing underperforms significantly.
+The gain is cheap in a scan-dominated regime and expensive when routing arithmetic is a large fraction of the query. A reasonable use is a coarse quantizer on a large corpus, with bases stored in int8 and $k$ in the range 16 to 32, when the metric of interest is nDCG and the scan dominates $Cm(k+1)$. It is a poor trade when that product is comparable to the scan, which is the situation in Table~\ref{tab:matched}'s total-cost rows. It is not a replacement for HNSW at the scales we measured.
 
-\paragraph{When Grassmannians remain promising.}
-(1)~\textbf{Multi-vector documents} (ColBERT-style bags, page image sets): each document is already a subspace or a set, and principal angles are natural~\cite{turaga2011statistical}.
-(2)~\textbf{Re-ranking:} compute Grassmannian features on a short HNSW candidate list, where SVD cost is amortized~\cite{cherian2014grassmannian}.
-(3)~\textbf{Oracle / supervised partitions:} if a taxonomy induces true subspace structure, Grassmannian routers can exploit it (synthetic oracle).
-(4)~\textbf{Sketched Grassmann kernels} for large $C$~\cite{huang2015grassmannian}.
-(5)~\textbf{Low-bit frame quantization under fusion frames:} Coupling subspace routing with Kashin-frame quantization and fusion frames remains an attractive theoretical area for hardware-constrained distributed environments, since both paradigms exploit overcompleteness to build noise-resilient representations~\cite{paul2026kashin}.
+\paragraph{When a Grassmannian score can still be the right tool.}
+(1)~Multi-vector documents, in the sense of ColBERT-style token bags~\cite{khattab2020colbert}, are already sets. Principal angles are a natural comparison there, and we did not evaluate them.
+(2)~Re-ranking a short candidate list with a subspace feature is a possible second stage. We have no measurement of it.
+(3)~An oracle partition that really is a union of subspaces reverses the comparison. The synthetic control in Appendix~\ref{app:synthetic} is that case, and it was not re-run for this revision.
+(4)~Sketched Grassmann kernels~\cite{delogne2025random,delogne2026bounded} would matter only if the linear score were accurate enough to be worth approximating. On this task it is not.
 
-\paragraph{Alternative framings that survive.}
-If a full Grassmannian index is the wrong artifact, three reframings remain honest:
-\begin{description}
-  \item[Re-ranking.] Run HNSW/IVF for candidates, then score candidate \emph{sets} (e.g., a document's chunk vectors) with principal angles. Matrix cost stays on a shortlist.
-  \item[Characterization.] Publish the rank / angle measurements as a geometry study of embedding spaces, without an indexing claim.
-  \item[Federated / shard routers.] If each tenant or topic shard is curated to be subspace-like, Grassmannian distances at the shard boundary can reuse the oracle lesson from Table~\ref{tab:synthetic-grid}.
-\end{description}
-
-\paragraph{What would change our mind.}
-While Table~\ref{tab:main} shows that $k$-flat residual routing slightly beats centroids on SciFact, verifying this on a wider array of BEIR datasets and scale would clarify whether this metric alignment holds generally. Absent that, engineering effort should weigh the $1.6\%$ recall gain against the small matrix-multiplication latency overhead.
-
-\section{Related Work}
+\section{Related work}
 \label{sec:rw}
 
-\paragraph{Grassmannian geometry.}
-Classical differential geometry of Grassmann manifolds~\cite{wong1967grassmann} and the computational viewpoint of Edelman--Arias--Smith~\cite{edelman1998grassmannian} and Absil et al.~\cite{absil2004riemannian,absil2008optimization} underpin principal angles, geodesics, and means. Recently, Bendokat et al.~\cite{bendokat2024handbook} compiled a detailed handbook on basic geometry and computational aspects of Grassmann manifolds, and Zhang et al.~\cite{zhang2018grassmannian} surveyed deep and shallow Grassmannian learning. Statistical models on Grassmannians also appear in computer vision~\cite{turaga2011statistical}.
+\paragraph{ANN indexes.}
+IVF originates in the visual-word index of Sivic and Zisserman~\cite{sivic2003video}. Product quantization and its optimized and locally optimized variants compress the vectors inside an inverted list~\cite{jegou2011product,ge2014opq,kalantidis2014lopq}. ScaNN uses anisotropic quantization aimed at inner-product error~\cite{guo2020scann}; we cite it and we did not run it. Graph indexes, including HNSW and NSG, dominate the latency-recall frontier at million scale and beyond~\cite{malkov2018hnsw,fu2019nsg,wang2021graphann}. FAISS is the library behind our IVF-Flat, IVF-PQ, and HNSW numbers~\cite{johnson2019faiss,douze2024faiss}.
 
-\paragraph{Local PCA and $k$-Flats.}
-The distance to an affine subspace (or a local PCA flat) is a classical construct in high-dimensional data modeling. Our formulation of $k$-flat residual routing directly builds on algorithms for k-plane clustering~\cite{bradley2000kplane}, local principal component analysis~\cite{kambhatla1997localpca}, and mixtures of probabilistic principal component analyzers~\cite{tipping1999ppca}. These models partition vector space into affine flats rather than origin-bound linear subspaces. Similar local reconstruction residuals have been successfully integrated in quantization frameworks such as locally optimized product quantization (LOPQ)~\cite{kalantidis2014lopq}.
+\paragraph{Nearest-subspace search.}
+Basri, Hassner, and Zelnik-Manor study approximate nearest-subspace search~\cite{basri2011approximate}. Wang, Atev, Wright, and Lerman hash subspaces through the Grassmannian for the same problem~\cite{wang2013fast}. Both assume the database objects are subspaces. Our negative result is about using that score on single-vector text embeddings. The positive control in the appendix is the setting those papers study.
 
-\paragraph{Subspace clustering.}
-Sparse and low-rank subspace clustering~\cite{elhamifar2013sparse,vidal2011subspace,liu2016lrr} and Grassmannian clustering, dictionary learning, and representation techniques~\cite{harandi2014grassmann,hu2014grassmannian,harandi2015sparse,wang2019grassmannian,hu2018survey,harandi2015extrinsic,harandi2013dictionary,wang2014lrr} assume data that are unions of low-rank flats. This line of work also includes intrinsic mean shift clustering on Stiefel and Grassmann manifolds~\cite{cetingul2009intrinsic}. Our SciFact measurements show only a mild deviation from that assumption for MiniLM clusters.
+\paragraph{Grassmannian learning and clustering.}
+Sparse and low-rank subspace clustering~\cite{elhamifar2013sparse,vidal2011subspace,liu2013lrr}, Grassmann low-rank representation~\cite{wang2014lrr}, intrinsic mean shift on Stiefel and Grassmann manifolds~\cite{cetingul2009intrinsic}, and Grassmann dictionary learning~\cite{harandi2013dictionary,harandi2015extrinsic} model data as unions of linear subspaces. Subspace means and subspace quantization are developed by Marrinan et al.~\cite{marrinan2014finding} and Stiverson, Kirby, and Peterson~\cite{stiverson2020subspace}. Statistical computation on the Grassmannian is reviewed in the vision literature~\cite{turaga2011statistical} and in the geometry surveys cited in Section~\ref{sec:prelim}~\cite{wong1967grassmann,absil2008optimization,bendokat2024handbook,zhang2018grassmannian}. Our clusters are not that kind of object: a through-origin fit is the wrong model, and a local flat is only a modest router.
 
-\paragraph{Scalable Grassmann methods and kernels.}
-Recursive similarity search~\cite{cherian2014grassmannian} and random-feature Grassmann kernels~\cite{huang2015grassmannian} attack the cost of manifold operations. Advanced random feature methods for Grassmannian kernels have been further developed by Delogne and Jacques~\cite{delogne2025random}, including bounds with rank-one projections~\cite{delogne2026bounded}. They matter once accuracy justifies the cost; our IVF comparison suggests that bar is not cleared for single-vector RAG routing.
+\paragraph{Local PCA}
+$k$-plane clustering, local PCA, and mixtures of probabilistic PCA are the source of the $k$-flat score~\cite{bradley2000kplane,kambhatla1997localpca,tipping1999ppca,tipping1999mppca}. The contribution of this paper is the controlled measurement against centroid IVF, not a new flat.
 
-\paragraph{Nearest subspace search and hashing.}
-Searching for nearest subspaces is a crucial component of high-dimensional geometric search. Basri et al.~\cite{basri2011approximate} developed approximate nearest subspace search methods. To scale up such searches, Wang et al.~\cite{wang2013fast} presented fast subspace search algorithms via Grassmannian-based hashing.
-
-\paragraph{Subspace mean and quantization.}
-Defining representative statistics on the manifold and compressing them are core problems for scaling up database representations. Marrinan et al.~\cite{marrinan2014finding} studied methods for finding the subspace mean or median to fit specific application needs, while Stiverson et al.~\cite{stiverson2020subspace} developed algorithms for subspace quantization directly on the Grassmannian.
-
-\paragraph{ANN and RAG.}
-Production ANN is dominated by HNSW and FAISS IVF/PQ~\cite{malkov2018hnsw,jegou2011product,johnson2019faiss,douze2024faiss,fu2019nsg,pan2024graph}. Dense retrieval and RAG~\cite{karpukhin2020dpr,lewis2020rag,gao2024ragsurvey} and BEIR~\cite{thakur2021beir} define the evaluation contract we adopt. Sentence-BERT-style embedders~\cite{reimers2019sbert} remain the common baseline representation.
-
-\paragraph{Frame theory and low-bit representations.}
-Frame-theoretic approaches generalize orthonormal bases to overcomplete tight frames, providing robust redundant measurements that naturally mitigate noise and erasures~\cite{casazza2008fusion}. In vector databases, this redundant overcompleteness can be combined with Kashin-frame representations~\cite{paul2026kashin} to build extremely compact, low-bit quantized indices that maintain ranking fidelity.
+\paragraph{Dense retrieval.}
+DPR, ColBERT, and the BEIR benchmark define the retrieval setting~\cite{karpukhin2020dpr,khattab2020colbert,thakur2021beir}. RAG surveys collect the surrounding system context~\cite{lewis2020rag,gao2023ragsurvey}. MiniLM, E5, and BGE are the embedder families we use or, in the case of E5, planned and did not run~\cite{wang2020minilm,wang2022e5,xiao2023cpack,reimers2019sbert}. Codebook-free low-bit representations such as Kashin frames~\cite{paul2026kashin} are complementary to the routing question studied here: they compress vectors, and they do not choose which cluster to probe.
 
 \section{Limitations}
 \label{sec:limit}
 
-We study one embedder family (MiniLM), one BEIR set (SciFact), and IVF-style routing rather than a full HNSW hybrid. Larger models (GTE, proprietary ada-class) and MS MARCO-scale corpora may shift the rank profile. We focus on straightforward linear subspaces and their proposed affine extension, but we do not evaluate learned metrics on $\grass$ or recursive search~\cite{cherian2014grassmannian}. Latency numbers are single-process NumPy on CPU and should be read comparatively, not as production SLOs.
+Corpus sizes are at most 30{,}000 documents. FiQA and TREC-COVID are subsampled, and TREC-COVID's slice is relevance-dense. Query sets are capped at 500; ArguAna, FiQA, and SciDocs are affected. TREC-COVID has 50 queries, so its intervals are wide.
+
+The embedders are 384-dimensional English models. No 768-dimensional model was run. \texttt{bge-base-en-v1.5} and \texttt{e5-small-v2} were planned and not run. Proprietary contrastive embedders were not run either~\cite{neelakantan2022cpt}. The partition is MiniBatch $k$-means. Full $k$-means or a balanced partition may differ.
+
+The cost model counts FLOPs. Our two-level index is Python and NumPy, so its latency is only indicative. FAISS numbers are single-thread and batch size 1, and they were measured while other jobs used the remaining cores of the original machine, so absolute milliseconds are indicative. ScaNN was not run. No billion-scale or disk-based setting was tested, so the scan-only regime is a proxy for large corpora, not a measurement.
+
+Budget envelopes pick the best grid point on the evaluation queries. They are not a hyperparameter chosen on a held-out split. The bound in Section~\ref{sec:why} is a sufficient condition, not a guarantee. The synthetic positive control was not re-run with more queries or a matched cluster count. MS MARCO, NQ, HotpotQA, and the rest of BEIR were not run. Per-query arrays from the original bootstrap are not in the repository; the intervals shipped in \texttt{summary.json} were computed from those arrays on the run machine.
 
 \section{Conclusion}
 \label{sec:concl}
 
-Pure linear Grassmannian indexing for RAG is an elegant theoretical idea that underperforms on a standard empirical test on contrastive embeddings due to centroid-offset omission ($\GrassRecall{}\%$ vs.\ $\CentRecall{}\%$ neighbor recall@10). While $k$-flat residual routing (affine subspace routing) successfully resolves this geometric mismatch (achieving $\AffineRecall{}\%$ recall), our dimension ablation shows that its performance is centroid-dominated. The $1.6\%$ gain is primarily a metric-alignment effect (correcting standard centroid cosine to match the Euclidean distance used during $k$-means partitioning) rather than a high-dimensional subspace phenomenon. For standard RAG vector databases, we recommend centroid IVF as a robust, low-overhead baseline. True linear Grassmannian routing remains best reserved for genuine subspace-valued objects such as multi-vector documents or image sets.
+Linear Grassmannian routing scores a cluster by the angle between the query and a through-origin subspace. On dense text retrieval that score discards the cluster offset. The gap versus centroid IVF is \GrassR{} points of neighbor recall@10, on average over twelve dataset and embedder pairs. Keeping the offset and adding the cluster's top-$k$ principal directions, the classical $k$-flat residual, improves on centroid IVF at equal clusters and probes, and the average gain grows with $k$ (\KSixteenR{} recall points and \KSixteenN{} nDCG@10 points at $k = 16$; \KThirtyTwoR{} and \KThirtyTwoN{} at $k = 32$). Euclidean distance to the centroid does not produce this gain. The gain is not free: routing arithmetic grows by a factor of $k+1$, and on these small corpora a finer cosine partition wins once that term is counted. At a fixed scan budget, $k$-flat routing keeps neighbor recall in the same range and improves nDCG@10. Bases quantize to int8 with a mean change of $-0.02$ recall points. Graph indexes remain stronger on recall at these scales, and our latency numbers are not an implementation-matched comparison. Where the scan dominates and the quantity of interest is nDCG@10, the $k$-flat score is a reasonable candidate for the coarse stage of an IVF-style index. Billion-scale validation, learned routers, and multi-vector documents, where a subspace score is native, are open.
 
 \section*{Reproducibility}
-Code, experiment scripts, and figures are available in the repository at \url{https://github.com/Agentic-Memory-Foundation/grassmanian}. Primary command: \texttt{python experiments/run\_experiments.py}, which regenerates \path{generated/stats.tex} and the figures under \path{figures/}.
+The released grid was run on an 8-core CPU with no GPU, using faiss-cpu 1.16.0 and torch 2.15.0+cpu, seeds 0 through 4. Code, the aggregated JSON, and the figure and table generators are in the repository at \url{https://github.com/Agentic-Memory-Foundation/grassmanian}. From the repository root,
+\begin{quote}
+\texttt{python experiments/v2/reproduce.py}
+\end{quote}
+rebuilds \path{generated/} and \path{figures/} from that JSON. A from-scratch rerun of the twelve-pair grid is \texttt{python experiments/v2/reproduce.py --full}, which downloads BEIR and refits every partition. The PDF is built with \texttt{make paper} (tectonic, or \texttt{pdflatex} and \texttt{bibtex}).
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
 
 \appendix
-\section{Failure modes and implementation notes}
-\label{app:failures}
+\section{Synthetic positive control}
+\label{app:synthetic}
+
+The linear Grassmannian router is not a broken implementation. On a planted model it is the right score, and centroid routing is not. We plant 20 random 4-planes in $\mathbb{R}^{64}$, draw 80 noisy points on each plane ($\sigma = 0.15$, 1{,}600 points), and issue one query near each plane (20 queries). Cluster means concentrate near the origin, so cosine-to-centroid has little to use. Table~\ref{tab:synthetic} reports neighbor recall@10. The oracle partition uses the planted labels ($C = 20$). The $k$-means partition uses $C = 16$. The subspace dimension in the table is $k = 4$, the planted dimension. This run is the legacy single-seed study. It was not repeated with more queries or with a matched cluster count, and it is not part of the twelve-pair bootstrap.
+
+Under the oracle partition, linear Grassmannian routing and the $k$-flat residual both sit at 98.0, 98.0, and 99.5 recall for $P = 1, 2, 4$, while centroid routing sits at 21.0, 36.5, and 36.5. Under $k$-means the order reverses for the linear score (23.5, 42.5, 66.0) and the centroid leads (49.0, 69.5, 82.5), with the $k$-flat residual slightly ahead of the centroid (50.5, 71.5, 82.5). Figure~\ref{fig:synthetic} is the recall curve from that run. The control says the linear score works when the partition is a union of through-origin subspaces. Unsupervised $k$-means on text embeddings does not produce that partition.
+
+\begin{table}[t]
+\centering
+\caption{Planted 4-planes, $k = 4$, 20 queries. Oracle uses the planted labels ($C = 20$). $k$-means uses $C = 16$. Not re-run.}
+\label{tab:synthetic}
+\small
+\begin{tabular}{lrrr}
+\toprule
+Setting & $P{=}1$ & $P{=}2$ & $P{=}4$ \\
+\midrule
+Oracle / linear Grassmannian & 98.0 & 98.0 & 99.5 \\
+Oracle / $k$-flat residual & 98.0 & 98.0 & 99.5 \\
+Oracle / centroid & 21.0 & 36.5 & 36.5 \\
+\midrule
+$k$-means / centroid & 49.0 & 69.5 & 82.5 \\
+$k$-means / linear Grassmannian & 23.5 & 42.5 & 66.0 \\
+$k$-means / $k$-flat residual & 50.5 & 71.5 & 82.5 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.78\textwidth]{figures/fig_synthetic.pdf}
+\caption{Planted subspaces, legacy run: neighbor recall against probe count. Not re-run.}
+\label{fig:synthetic}
+\end{figure}
 
 \paragraph{Centroid bias under oracle subspaces.}
-In the planted model, each cluster is a centered noisy sample from a $k$-plane. The sample mean concentrates near the origin, so $\langle q,\mu_c\rangle$ is weakly informative, while principal angles match the generative process; hence oracle Grassmannian dominates Table~\ref{tab:synthetic-grid}.
+In the planted model each cluster is a centered noisy sample from a $k$-plane. The sample mean concentrates near the origin, so the inner product with $\mu_c$ carries little information, while the principal angle matches the generative process.
 
-\paragraph{Subspace bias under $k$-means blobs.}
-MiniLM clusters behave like thick cones around a non-zero mean. A linear subspace through the origin over-generalizes directions; centroids keep the offset that contrastive training uses. Grassmannian routing therefore needs roughly $2\times$ the probe budget of centroids to approach the same SciFact neighbor recall (Table~\ref{tab:scifact-grid}).
+\section{Gap at other probe budgets}
+\label{app:kcurve}
 
-\paragraph{Implementation.}
-NumPy + scikit-learn MiniBatch $k$-means; Grassmannian scores via a stacked $(C,m,k)$ basis tensor. Embeddings cached under \path{experiments/cache/}. SciFact from HuggingFace \texttt{BeIR/scifact} with qrels-covered documents prioritized.
+Table~\ref{tab:kcurve} extends Table~\ref{tab:routers} across $C$ and $P$. At $P \in \{2, 4\}$ the recall interval for $k = 16$ is above zero on at least 8 of 12 pairs, except at $C = 16$, $P = 2$, where the count is 6. The gap shrinks as $P$ grows, which is what a router comparison should do: once the probe set is most of the corpus, every router returns the same candidates. Appendix Table~\ref{tab:deltas} records every router at the primary slice, including the pairs where the point estimate is negative.
+
+\input{generated/table_kcurve.tex}
+\input{generated/table_deltas.tex}
 
 \end{document}
