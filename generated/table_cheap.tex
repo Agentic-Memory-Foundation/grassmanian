@@ -1,0 +1,22 @@
+\begin{table}[t]
+\centering
+\caption{Cheaper $k$-flat variants at $C{=}32$, $P{=}4$. Means over 12 pairs and five seeds. Deltas are versus fp32 $k{=}16$, in points. Router memory is the mean of the per-pair byte counts, in KB, and does not include the document vectors.}
+\label{tab:cheap}
+\small
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabular}{lrrrrrr}
+\toprule
+Variant & R@10 & nDCG & $\Delta$R & $\Delta$n & Mean $k$ & KB \\
+\midrule
+Cosine centroid & 86.1 & 43.2 & -1.73 & -1.29 & 0.0 & 49 \\
+$k$-flat $k{=}16$, fp32 & 87.8 & 44.5 & +0.00 & +0.00 & 16.0 & 836 \\
+$k$-flat $k{=}16$, fp16 & 87.8 & 44.5 & +0.00 & +0.00 & 16.0 & 418 \\
+$k$-flat $k{=}16$, int8 & 87.8 & 44.5 & -0.02 & +0.00 & 16.0 & 248 \\
+One shared basis, $k{=}16$ & 74.7 & 39.7 & -13.15 & -4.75 & 16.0 & 74 \\
+One shared basis, $k{=}32$ & 69.7 & 38.0 & -18.12 & -6.45 & 32.0 & 98 \\
+Adaptive, $\tau{=}0.15$ & 85.9 & 43.4 & -1.90 & -1.09 & 3.3 & 211 \\
+Adaptive, $\tau{=}0.25$ & 86.5 & 43.6 & -1.37 & -0.87 & 6.3 & 358 \\
+Adaptive, $\tau{=}0.35$ & 87.2 & 43.9 & -0.61 & -0.55 & 10.6 & 572 \\
+\bottomrule
+\end{tabular}
+\end{table}

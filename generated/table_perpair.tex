@@ -1,0 +1,25 @@
+\begin{table}[t]
+\centering
+\caption{Cosine IVF and the $k{=}16$ k-flat router at $C{=}32$, $P{=}4$. All figures are percentages. Brackets are paired 95\% bootstrap CIs on the difference (k-flat minus cosine). Bold intervals exclude zero. Exact is full cosine search on the evaluated document set, not a published full-corpus BEIR number. TREC-COVID uses 50 queries, so its intervals are wide.}
+\label{tab:perpair}
+\footnotesize
+\setlength{\tabcolsep}{3.2pt}
+\begin{tabular}{llrrrrrrr}
+\toprule
+Data & Model & R cos & R $k$16 & $\Delta$R [CI] & n cos & n $k$16 & $\Delta$n [CI] & Exact n \\
+\midrule
+SciFact & MiniLM & 83.3 & 85.5 & \textbf{+2.1 [+1.2, +3.0]} & 56.2 & 59.5 & \textbf{+3.3 [+1.6, +5.3]} & 64.8 \\
+SciFact & BGE & 82.0 & 85.4 & \textbf{+3.5 [+2.6, +4.4]} & 62.8 & 66.7 & \textbf{+3.8 [+2.2, +5.5]} & 70.3 \\
+NFCorpus & MiniLM & 69.8 & 72.0 & \textbf{+2.2 [+1.0, +3.5]} & 25.7 & 28.1 & \textbf{+2.4 [+1.3, +3.4]} & 31.9 \\
+NFCorpus & BGE & 66.3 & 70.7 & \textbf{+4.3 [+3.2, +5.5]} & 28.7 & 31.2 & \textbf{+2.5 [+1.5, +3.5]} & 34.4 \\
+ArguAna & MiniLM & 95.4 & 97.4 & \textbf{+2.0 [+1.4, +2.7]} & 35.8 & 36.4 & \textbf{+0.6 [+0.2, +0.9]} & 36.9 \\
+ArguAna & BGE & 93.9 & 96.2 & \textbf{+2.2 [+1.7, +2.8]} & 38.8 & 39.6 & \textbf{+0.8 [+0.3, +1.4]} & 40.4 \\
+SciDocs & MiniLM & 92.8 & 93.9 & \textbf{+1.1 [+0.5, +1.7]} & 21.8 & 21.8 & +0.1 [-0.2, +0.4] & 22.3 \\
+SciDocs & BGE & 91.8 & 92.6 & \textbf{+0.8 [+0.3, +1.4]} & 19.8 & 19.9 & +0.1 [-0.2, +0.3] & 20.6 \\
+FiQA & MiniLM & 89.3 & 89.5 & +0.3 [-0.3, +0.8] & 40.0 & 40.7 & +0.6 [-0.1, +1.4] & 43.6 \\
+FiQA & BGE & 89.5 & 89.0 & -0.6 [-1.2, +0.1] & 42.3 & 42.1 & -0.2 [-0.9, +0.6] & 45.6 \\
+TREC-COVID & MiniLM & 92.5 & 92.0 & -0.6 [-2.4, +1.5] & 63.1 & 63.9 & +0.9 [-0.2, +2.2] & 64.3 \\
+TREC-COVID & BGE & 86.4 & 89.6 & \textbf{+3.3 [+0.5, +6.1]} & 83.0 & 83.4 & +0.5 [-1.0, +2.1] & 83.9 \\
+\bottomrule
+\end{tabular}
+\end{table}

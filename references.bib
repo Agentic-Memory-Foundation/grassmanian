@@ -1,472 +1,241 @@
-% ---- Grassmannian / subspace geometry ----
+% ===== Corrected bibliography for the Grassmannian RAG paper (all entries checked against Crossref, arXiv, PMLR or NeurIPS proceedings pages) =====
+% == Geometry ==
 @article{edelman1998grassmannian,
   title={The Geometry of Algorithms with Orthogonality Constraints},
   author={Edelman, Alan and Arias, Tom{\'a}s A. and Smith, Steven T.},
   journal={SIAM Journal on Matrix Analysis and Applications},
-  volume={20},
-  number={2},
-  pages={303--353},
-  year={1998}
-}
-
+  volume={20}, number={2}, pages={303--353}, year={1998}, doi={10.1137/S0895479895290954}}
 @article{absil2004riemannian,
   title={Riemannian Geometry of {Grassmann} Manifolds with a View on Algorithmic Computation},
   author={Absil, P.-A. and Mahony, R. and Sepulchre, R.},
   journal={Acta Applicandae Mathematicae},
-  volume={80},
-  number={2},
-  pages={199--220},
-  year={2004}
-}
-
+  volume={80}, number={2}, pages={199--220}, year={2004}, doi={10.1023/B:ACAP.0000013855.14971.91}}
 @book{absil2008optimization,
   title={Optimization Algorithms on Matrix Manifolds},
   author={Absil, P.-A. and Mahony, R. and Sepulchre, R.},
-  publisher={Princeton University Press},
-  year={2008}
-}
-
+  publisher={Princeton University Press}, year={2008}}
 @article{wong1967grassmann,
   title={Differential Geometry of {Grassmann} Manifolds},
-  author={Wong, Y. C.},
-  journal={Bulletin of the American Mathematical Society},
-  volume={73},
-  number={5},
-  pages={689--694},
-  year={1967}
-}
-
-% ---- Subspace clustering on Grassmannians ----
-@inproceedings{liu2016lrr,
-  title={Low-Rank Representation on {Grassmann} Manifolds},
-  author={Liu, Guangcan and Lin, Zhouchen and Yan, Shuicheng and Sun, Jun and Yu, Yong and Ma, Yi},
-  booktitle={IEEE Transactions on Pattern Analysis and Machine Intelligence},
-  year={2013},
-  note={Grassmannian LRR for subspace clustering}
-}
-
-@inproceedings{wang2012grassmannian,
-  title={Grassmannian Manifold Optimization for Subspace Clustering},
-  author={Wang, Rui and Vidal, Ren{\'e} and Ma, Yi},
-  booktitle={Proc.\ IEEE Conf.\ Computer Vision and Pattern Recognition},
-  year={2015},
-  note={Riemannian optimization for subspace clustering}
-}
-
-@article{harandi2014grassmann,
-  title={Graph-Clustering on {Grassmann} Manifolds for Subspace Clustering},
-  author={Harandi, Mehrtash and Sanderson, Conrad and Shirazi, Sareh and Lovell, Brian C.},
-  journal={Pattern Recognition},
-  year={2014}
-}
-
+  author={Wong, Yung-Chow},
+  journal={Proceedings of the National Academy of Sciences},
+  volume={57}, number={3}, pages={589--594}, year={1967}, doi={10.1073/pnas.57.3.589}}
+@article{bendokat2024handbook,
+  title={A {Grassmann} Manifold Handbook: Basic Geometry and Computational Aspects},
+  author={Bendokat, Thomas and Zimmermann, Ralf and Absil, P.-A.},
+  journal={Advances in Computational Mathematics},
+  volume={50}, number={1}, pages={6}, year={2024}, doi={10.1007/s10444-023-10090-8}}
+@misc{zhang2018grassmannian,
+  title={{Grassmannian} Learning: Embedding Geometry Awareness in Shallow and Deep Learning},
+  author={Zhang, Jiayao and Zhu, Guangxu and Heath, Robert W. and Huang, Kaibin},
+  year={2018}, eprint={1808.02229}, archivePrefix={arXiv}, primaryClass={cs.LG}}
 @article{turaga2011statistical,
-  title={Statistical Analysis on {Grassmann} Manifolds with Applications},
-  author={Turaga, Pavan K. and Veeraraghavan, Ashok and Chellappa, Rama},
-  journal={Computer Vision and Image Understanding},
-  year={2011}
-}
-
-@inproceedings{elhamifar2013sparse,
+  title={Statistical Computations on {Grassmann} and {Stiefel} Manifolds for Image and Video-Based Recognition},
+  author={Turaga, Pavan and Veeraraghavan, Ashok and Srivastava, Anuj and Chellappa, Rama},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  volume={33}, number={11}, pages={2273--2286}, year={2011}, doi={10.1109/TPAMI.2011.52}}
+% == Subspace clustering, Grassmann clustering, dictionary learning, quantization ==
+@article{elhamifar2013sparse,
   title={Sparse Subspace Clustering: Algorithm, Theory, and Applications},
   author={Elhamifar, Ehsan and Vidal, Ren{\'e}},
-  booktitle={IEEE Transactions on Pattern Analysis and Machine Intelligence},
-  year={2013}
-}
-
-@inproceedings{vidal2011subspace,
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  volume={35}, number={11}, pages={2765--2781}, year={2013}, doi={10.1109/TPAMI.2013.57}}
+@article{vidal2011subspace,
   title={Subspace Clustering},
   author={Vidal, Ren{\'e}},
   journal={IEEE Signal Processing Magazine},
-  year={2011}
-}
-
-@article{hu2014grassmannian,
-  title={Grassmannian Dictionary Learning for Subspace Clustering},
-  author={Hu, Junlin and Edraki, Nazanin and Harandi, Mehrtash and Lovell, Brian C.},
-  journal={Pattern Recognition Letters},
-  year={2014}
-}
-
-@article{hu2018survey,
-  title={Recent Advances in Subspace Learning on {Grassmann} Manifolds: A Survey},
-  author={Hu, Junlin and Sun, Lu and Yu, Jian and Lovell, Brian C.},
-  journal={Pattern Recognition},
-  year={2018},
-  note={Surge in Grassmannian subspace learning methods}
-}
-
-@inproceedings{wang2019grassmannian,
-  title={Vector Quantization on {Grassmann} Manifolds for Clustering},
-  author={Wang, Wei and Carreira-Perpi{\~n}{\'a}n, Miguel},
-  booktitle={Proc.\ Int.\ Conf.\ Machine Learning},
-  year={2019},
-  note={Cluster prototypes and subspace means/medians}
-}
-
-% ---- ANN / vector indexing ----
-@inproceedings{malkov2018hnsw,
-  title={Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs},
-  author={Malkov, Yu. A. and Yashunin, D. A.},
-  booktitle={IEEE Transactions on Pattern Analysis and Machine Intelligence},
-  year={2018}
-}
-
-@inproceedings{johnson2019faiss,
-  title={Billion-Scale Similarity Search with {GPU}s},
-  author={Johnson, Jeff and Douze, Matthijs and J{\'e}gou, Herv{\'e}},
-  booktitle={IEEE Transactions on Big Data},
-  year={2021},
-  note={FAISS library}
-}
-
-@inproceedings{douze2024faiss,
-  title={The {FAISS} Library},
-  author={Douze, Matthijs and Guzhva, Alexandr and Deng, Chengqi and Johnson, Jeff and Szilvasy, Gergely and Mazar{\'e}, Pierre-Emmanuel and Lomeli, Maria and Barros, Lucas and Yashunin, Dmitry and J{\'e}gou, Herv{\'e}},
-  year={2024}
-}
-
-@inproceedings{jegou2011product,
-  title={Product Quantization for Nearest Neighbor Search},
-  author={J{\'e}gou, Herv{\'e} and Douze, Matthijs and Schmid, Cordelia},
+  volume={28}, number={2}, pages={52--68}, year={2011}, doi={10.1109/MSP.2010.939739}}
+@article{liu2013lrr,
+  title={Robust Recovery of Subspace Structures by Low-Rank Representation},
+  author={Liu, Guangcan and Lin, Zhouchen and Yan, Shuicheng and Sun, Ju and Yu, Yong and Ma, Yi},
   journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
-  year={2011}
-}
-
-@inproceedings{indyk1998lsh,
-  title={Approximate Nearest Neighbors: Towards Removing the Curse of Dimensionality},
-  author={Indyk, Piotr and Motwani, Rajeev},
-  booktitle={Proc.\ ACM Symp.\ Theory of Computing},
-  year={1998}
-}
-
-@inproceedings{fu2019nsg,
-  title={Fast Approximate Nearest Neighbor Search with the Navigating Spreading-out Graph},
-  author={Fu, Cong and Xiang, Chang and Wang, Mu and Cai, Deng},
-  booktitle={Proc.\ VLDB Endowment},
-  year={2019}
-}
-
-@article{pan2024graph,
-  title={Graph-based Approximate Nearest Neighbor Search: A Survey},
-  author={Pan, Jiajie and Wang, Yusen and Wang, Shengnan},
-  journal={ACM Computing Surveys},
-  year={2024}
-}
-
-@inproceedings{johnson2024ann,
-  title={Revisiting the {Curse} of Dimensionality in Vector Search},
-  author={Aum{\"u}ller, Martin and Bernhardsson, Erik and Faithfull, Alexander},
-  booktitle={Ann-Benchmarks},
-  year={2020}
-}
-
-% ---- RAG / retrieval ----
-@inproceedings{lewis2020rag,
-  title={Retrieval-Augmented Generation for Knowledge-Intensive {NLP} Tasks},
-  author={Lewis, Patrick and Perez, Ethan and Piktus, Aleksandra and Petroni, Fabio and Karpukhin, Vladimir and Goyal, Naman and K{\"u}ttler, Heinrich and Lewis, Mike and Yih, Wen-tau and Rockt{\"a}schel, Tim and Riedel, Sebastian and Kiela, Douwe},
-  booktitle={Advances in Neural Information Processing Systems},
-  year={2020}
-}
-
-@inproceedings{gao2024ragsurvey,
-  title={Retrieval-Augmented Generation for Large Language Models: A Survey},
-  author={Gao, Yunfan and Xiong, Yunzhi and Gao, Yu and Jia, Kangxiang and Pan, Jinliu and Bi, Yuxi and Dai, Yi and Sun, Jiawei and Wang, Meng and Wang, Haofen},
-  journal={arXiv preprint arXiv:2312.10997},
-  year={2024}
-}
-
-@inproceedings{karpukhin2020dpr,
-  title={Dense Passage Retrieval for Open-Domain Question Answering},
-  author={Karpukhin, Vladimir and O\u{g}uz, Barlas and Min, Sewon and Lewis, Patrick and Wu, Ledell and Edunov, Sergey and Chen, Danqi and Yih, Wen-tau},
-  booktitle={Proceedings of EMNLP},
-  year={2020}
-}
-
-@inproceedings{thakur2021beir,
-  title={{BEIR}: A Heterogeneous Benchmark for Zero-shot Evaluation of Information Retrieval Models},
-  author={Thakur, Nandan and Reimers, Nils and R{\"u}ckl{\'e}, Andreas and Srivastava, Abhishek and Gurevych, Iryna},
-  booktitle={NeurIPS Datasets and Benchmarks Track},
-  year={2021}
-}
-
-@inproceedings{craswell2020msmarco,
-  title={Overview of the {TREC} 2020 Deep Learning Track},
-  author={Craswell, Nick and Mitra, Bhaskar and Yilmaz, Emine},
-  booktitle={Text REtrieval Conference},
-  year={2020}
-}
-
-@inproceedings{reimers2019sbert,
-  title={Sentence-{BERT}: Sentence Embeddings using Siamese {BERT}-Networks},
-  author={Reimers, Nils and Gurevych, Iryna},
-  booktitle={Proceedings of EMNLP},
-  year={2019}
-}
-
-@inproceedings{neelakantan2022ada,
-  title={Text and Code Embeddings by Contrastive Pre-Training},
-  author={Neelakantan, Arvind and others},
-  booktitle={OpenAI Technical Report},
-  year={2022}
-}
-
-@inproceedings{wang2022gte,
-  title={Text Embeddings by Weakly-Supervised Contrastive Pre-training},
-  author={Wang, Liang and Yang, Nan and Huang, Xiaolong and Yang, Linjun and Majumder, Rangan and Wei, Furu},
-  booktitle={arXiv preprint arXiv:2212.03533},
-  year={2022}
-}
-
-% ---- Hybrid / metadata filtering ----
-@inproceedings{zhang2024filter,
-  title={Filtered {ANN} Search: Combining Vector Similarity with Metadata Constraints},
-  author={Zhang, Mingyu and others},
-  journal={Proc.\ VLDB Endowment},
-  year={2024}
-}
-
-@inproceedings{wei2024hybrid,
-  title={Hybrid Retrieval: Combining Dense and Sparse Retrieval for Production {RAG}},
-  author={Wei, Xinyu and others},
-  year={2024}
-}
-
-% ---- Dimension reduction / semantic hashing ----
-@inproceedings{salakhutdinov2009semantic,
-  title={Semantic Hashing},
-  author={Salakhutdinov, Ruslan and Hinton, Geoffrey},
-  journal={International Journal of Approximate Reasoning},
-  year={2009}
-}
-
-@inproceedings{weiss2009sh,
-  title={Spectral Hashing},
-  author={Weiss, Yair and Torralba, Antonio and Fergus, Rob},
-  booktitle={Advances in Neural Information Processing Systems},
-  year={2009}
-}
-
-% ---- Approximate Grassmannian / scalable methods ----
-@inproceedings{cherian2014grassmannian,
-  title={Recursive Similarity Search on {Grassmann} Manifolds for Computer Vision},
-  author={Cherian, Anoop},
-  journal={Pattern Recognition},
-  year={2014}
-}
-
-@inproceedings{harandi2015sparse,
-  title={Sparse Coding on {Grassmann} Manifolds: A Dictionary Learning Approach},
-  author={Harandi, Mehrtash and Sanderson, Conrad and Shen, Chunhua and Lovell, Brian C.},
-  journal={Pattern Recognition},
-  year={2015}
-}
-
-@inproceedings{huang2015grassmannian,
-  title={Scalable {Grassmann} Kernel via Random Projection},
-  author={Huang, Zhiwu and Wang, Ruiping and Shan, Shiguang and Chen, Xilin},
-  booktitle={Proc.\ AAAI},
-  year={2015}
-}
-
-% ---- Local PCA / K-Flat Clustering / LOPQ ----
+  volume={35}, number={1}, pages={171--184}, year={2013}, doi={10.1109/TPAMI.2012.88}}
+@inproceedings{wang2014lrr,
+  title={Low Rank Representation on {Grassmann} Manifolds},
+  author={Wang, Boyue and Hu, Yongli and Gao, Junbin and Sun, Yanfeng and Yin, Baocai},
+  booktitle={Computer Vision -- ACCV 2014}, series={Lecture Notes in Computer Science},
+  volume={9003}, pages={81--96}, publisher={Springer}, year={2015}, doi={10.1007/978-3-319-16865-4_6}}
+@inproceedings{cetingul2009intrinsic,
+  title={Intrinsic Mean Shift for Clustering on {Stiefel} and {Grassmann} Manifolds},
+  author={Cetingul, Hasan Ertan and Vidal, Ren{\'e}},
+  booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages={1896--1902}, year={2009}, doi={10.1109/CVPR.2009.5206806}}
+@inproceedings{harandi2013dictionary,
+  title={Dictionary Learning and Sparse Coding on {Grassmann} Manifolds: An Extrinsic Solution},
+  author={Harandi, Mehrtash and Sanderson, Conrad and Shen, Chunhua and Lovell, Brian},
+  booktitle={Proceedings of the IEEE International Conference on Computer Vision (ICCV)},
+  pages={3120--3127}, year={2013}, doi={10.1109/ICCV.2013.387}}
+@article{harandi2015extrinsic,
+  title={Extrinsic Methods for Coding and Dictionary Learning on {Grassmann} Manifolds},
+  author={Harandi, Mehrtash and Hartley, Richard and Shen, Chunhua and Lovell, Brian and Sanderson, Conrad},
+  journal={International Journal of Computer Vision},
+  volume={114}, number={2-3}, pages={113--136}, year={2015}, doi={10.1007/s11263-015-0833-x}}
+@inproceedings{stiverson2020subspace,
+  title={Subspace Quantization on the {Grassmannian}},
+  author={Stiverson, Shannon and Kirby, Michael and Peterson, Chris},
+  booktitle={Advances in Self-Organizing Maps, Learning Vector Quantization, Clustering and Data Visualization (WSOM 2019)},
+  series={Advances in Intelligent Systems and Computing}, pages={251--260}, publisher={Springer}, year={2020},
+  doi={10.1007/978-3-030-19642-4_25}}
+@inproceedings{marrinan2014finding,
+  title={Finding the Subspace Mean or Median to Fit Your Need},
+  author={Marrinan, Tim and Draper, Bruce and Beveridge, J. Ross and Kirby, Michael and Peterson, Chris},
+  booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages={1082--1089}, year={2014}, doi={10.1109/CVPR.2014.142}}
+% == Nearest-subspace search and Grassmann kernels ==
+@article{basri2011approximate,
+  title={Approximate Nearest Subspace Search},
+  author={Basri, Ronen and Hassner, Tal and Zelnik-Manor, Lihi},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  volume={33}, number={2}, pages={266--278}, year={2011}, doi={10.1109/TPAMI.2010.110}}
+@inproceedings{wang2013fast,
+  title={Fast Subspace Search via {Grassmannian} Based Hashing},
+  author={Wang, Xu and Atev, Stefan and Wright, John and Lerman, Gilad},
+  booktitle={Proceedings of the IEEE International Conference on Computer Vision (ICCV)},
+  pages={2776--2783}, year={2013}, doi={10.1109/ICCV.2013.345}}
+@misc{delogne2025random,
+  title={Random Features for {Grassmannian} Kernels},
+  author={Delogne, R{\'e}mi and Jacques, Laurent},
+  year={2025}, eprint={2504.21533}, archivePrefix={arXiv}}
+@article{delogne2026bounded,
+  title={Random Features for {Grassmannian} Kernel Approximation with Bounded Rank-One Projections},
+  author={Delogne, R{\'e}mi and Jacques, Laurent},
+  journal={Transactions on Machine Learning Research}, year={2026}, note={arXiv:2608.04227}}
+% == Local PCA, k-flats, PPCA ==
 @article{bradley2000kplane,
   title={k-Plane Clustering},
   author={Bradley, Paul S. and Mangasarian, Olvi L.},
   journal={Journal of Global Optimization},
-  volume={16},
-  number={1},
-  pages={23--32},
-  year={2000}
-}
-
+  volume={16}, number={1}, pages={23--32}, year={2000}, doi={10.1023/A:1008324625522}}
 @article{kambhatla1997localpca,
-  title={Dimension Reduction by Local {PCA}},
-  author={Kambhatla, Nanda and Leen, Todd K.},
+  title={Dimension Reduction by Local Principal Component Analysis},
+  author={Kambhatla, Nandakishore and Leen, Todd K.},
   journal={Neural Computation},
-  volume={9},
-  number={7},
-  pages={1493--1516},
-  year={1997}
-}
-
-@article{tipping1999ppca,
+  volume={9}, number={7}, pages={1493--1516}, year={1997}, doi={10.1162/neco.1997.9.7.1493}}
+@article{tipping1999mppca,
   title={Mixtures of Probabilistic Principal Component Analyzers},
   author={Tipping, Michael E. and Bishop, Christopher M.},
+  journal={Neural Computation},
+  volume={11}, number={2}, pages={443--482}, year={1999}, doi={10.1162/089976699300016728}}
+@article{tipping1999ppca,
+  title={Probabilistic Principal Component Analysis},
+  author={Tipping, Michael E. and Bishop, Christopher M.},
   journal={Journal of the Royal Statistical Society: Series B (Statistical Methodology)},
-  volume={61},
-  number={3},
-  pages={611--622},
-  year={1999}
-}
-
-@article{ge2013opq,
+  volume={61}, number={3}, pages={611--622}, year={1999}, doi={10.1111/1467-9868.00196}}
+% == ANN search ==
+@inproceedings{sivic2003video,
+  title={Video {Google}: A Text Retrieval Approach to Object Matching in Videos},
+  author={Sivic, Josef and Zisserman, Andrew},
+  booktitle={Proceedings of the Ninth IEEE International Conference on Computer Vision (ICCV)},
+  volume={2}, pages={1470--1477}, year={2003}, doi={10.1109/ICCV.2003.1238663}}
+@article{jegou2011product,
+  title={Product Quantization for Nearest Neighbor Search},
+  author={J{\'e}gou, Herv{\'e} and Douze, Matthijs and Schmid, Cordelia},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  volume={33}, number={1}, pages={117--128}, year={2011}, doi={10.1109/TPAMI.2010.57}}
+@article{ge2014opq,
   title={Optimized Product Quantization},
   author={Ge, Tiezheng and He, Kaiming and Ke, Qifa and Sun, Jian},
   journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
-  volume={35},
-  number={11},
-  pages={2653--2668},
-  year={2013}
-}
-
+  volume={36}, number={4}, pages={744--755}, year={2014}, doi={10.1109/TPAMI.2013.240}}
 @inproceedings{kalantidis2014lopq,
-  title={Locally Optimized Product Quantization},
+  title={Locally Optimized Product Quantization for Approximate Nearest Neighbor Search},
   author={Kalantidis, Yannis and Avrithis, Yannis},
   booktitle={Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
-  pages={2329--2336},
-  year={2014}
-}
-
-% ---- Theory / distance preservation ----
-@article{johnson1984lipschitz,
-  title={Extensions of {Lipschitz} mappings into a {Hilbert} space},
-  author={Johnson, William B. and Lindenstrauss, Joram},
-  journal={Contemporary Mathematics},
-  volume={26},
-  pages={189--206},
-  year={1984}
-}
-
-@article{cover1965geometrical,
-  title={Geometrical and Statistical Properties of Systems of Linear Inequalities with Applications to Pattern Recognition},
-  author={Cover, Thomas M.},
-  journal={IEEE Transactions on Electronic Computers},
-  year={1965}
-}
-
+  pages={2329--2336}, year={2014}, doi={10.1109/CVPR.2014.298}}
+@inproceedings{guo2020scann,
+  title={Accelerating Large-Scale Inference with Anisotropic Vector Quantization},
+  author={Guo, Ruiqi and Sun, Philip and Lindgren, Erik and Geng, Quan and Simcha, David and Chern, Felix and Kumar, Sanjiv},
+  booktitle={Proceedings of the 37th International Conference on Machine Learning (ICML)},
+  series={Proceedings of Machine Learning Research}, volume={119}, pages={3887--3896}, publisher={PMLR}, year={2020}}
+@article{malkov2018hnsw,
+  title={Efficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs},
+  author={Malkov, Yu. A. and Yashunin, D. A.},
+  journal={IEEE Transactions on Pattern Analysis and Machine Intelligence},
+  volume={42}, number={4}, pages={824--836}, year={2020}, doi={10.1109/TPAMI.2018.2889473}}
+@article{fu2019nsg,
+  title={Fast Approximate Nearest Neighbor Search with the Navigating Spreading-out Graph},
+  author={Fu, Cong and Xiang, Chao and Wang, Changxu and Cai, Deng},
+  journal={Proceedings of the VLDB Endowment},
+  volume={12}, number={5}, pages={461--474}, year={2019}, doi={10.14778/3303753.3303754}}
+@article{wang2021graphann,
+  title={A Comprehensive Survey and Experimental Comparison of Graph-Based Approximate Nearest Neighbor Search},
+  author={Wang, Mengzhao and Xu, Xiaoliang and Yue, Qiang and Wang, Yuxiang},
+  journal={Proceedings of the VLDB Endowment},
+  volume={14}, number={11}, pages={1964--1978}, year={2021}, doi={10.14778/3476249.3476255}}
+@article{johnson2019faiss,
+  title={Billion-Scale Similarity Search with {GPU}s},
+  author={Johnson, Jeff and Douze, Matthijs and J{\'e}gou, Herv{\'e}},
+  journal={IEEE Transactions on Big Data},
+  volume={7}, number={3}, pages={535--547}, year={2021}, doi={10.1109/TBDATA.2019.2921572}}
+@misc{douze2024faiss,
+  title={The {Faiss} Library},
+  author={Douze, Matthijs and Guzhva, Alexandr and Deng, Chengqi and Johnson, Jeff and Szilvasy, Gergely and Mazar{\'e}, Pierre-Emmanuel and Lomeli, Maria and Hosseini, Lucas and J{\'e}gou, Herv{\'e}},
+  year={2024}, eprint={2401.08281}, archivePrefix={arXiv}}
+% == Retrieval, RAG, embedders, data ==
+@inproceedings{lewis2020rag,
+  title={Retrieval-Augmented Generation for Knowledge-Intensive {NLP} Tasks},
+  author={Lewis, Patrick and Perez, Ethan and Piktus, Aleksandra and Petroni, Fabio and Karpukhin, Vladimir and Goyal, Naman and K{\"u}ttler, Heinrich and Lewis, Mike and Yih, Wen-tau and Rockt{\"a}schel, Tim and Riedel, Sebastian and Kiela, Douwe},
+  booktitle={Advances in Neural Information Processing Systems}, volume={33}, year={2020}, note={arXiv:2005.11401}}
+@misc{gao2023ragsurvey,
+  title={Retrieval-Augmented Generation for Large Language Models: A Survey},
+  author={Gao, Yunfan and Xiong, Yun and Gao, Xinyu and Jia, Kangxiang and Pan, Jinliu and Bi, Yuxi and Dai, Yi and Sun, Jiawei and Wang, Meng and Wang, Haofen},
+  year={2023}, eprint={2312.10997}, archivePrefix={arXiv}}
+@inproceedings{karpukhin2020dpr,
+  title={Dense Passage Retrieval for Open-Domain Question Answering},
+  author={Karpukhin, Vladimir and O{\u{g}}uz, Barlas and Min, Sewon and Lewis, Patrick and Wu, Ledell and Edunov, Sergey and Chen, Danqi and Yih, Wen-tau},
+  booktitle={Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)},
+  pages={6769--6781}, year={2020}, doi={10.18653/v1/2020.emnlp-main.550}}
+@inproceedings{khattab2020colbert,
+  title={{ColBERT}: Efficient and Effective Passage Search via Contextualized Late Interaction over {BERT}},
+  author={Khattab, Omar and Zaharia, Matei},
+  booktitle={Proceedings of the 43rd International ACM SIGIR Conference on Research and Development in Information Retrieval},
+  pages={39--48}, year={2020}, doi={10.1145/3397271.3401075}}
+@inproceedings{thakur2021beir,
+  title={{BEIR}: A Heterogeneous Benchmark for Zero-shot Evaluation of Information Retrieval Models},
+  author={Thakur, Nandan and Reimers, Nils and R{\"u}ckl{\'e}, Andreas and Srivastava, Abhishek and Gurevych, Iryna},
+  booktitle={Thirty-fifth Conference on Neural Information Processing Systems Datasets and Benchmarks Track},
+  year={2021}, note={arXiv:2104.08663}}
+@inproceedings{wadden2020scifact,
+  title={Fact or Fiction: Verifying Scientific Claims},
+  author={Wadden, David and Lin, Shanchuan and Lo, Kyle and Wang, Lucy Lu and van Zuylen, Madeleine and Cohan, Arman and Hajishirzi, Hannaneh},
+  booktitle={Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP)},
+  pages={7534--7550}, year={2020}, doi={10.18653/v1/2020.emnlp-main.609}}
+@inproceedings{reimers2019sbert,
+  title={Sentence-{BERT}: Sentence Embeddings using Siamese {BERT}-Networks},
+  author={Reimers, Nils and Gurevych, Iryna},
+  booktitle={Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)},
+  pages={3980--3990}, year={2019}, doi={10.18653/v1/D19-1410}}
+@inproceedings{wang2020minilm,
+  title={{MiniLM}: Deep Self-Attention Distillation for Task-Agnostic Compression of Pre-Trained Transformers},
+  author={Wang, Wenhui and Wei, Furu and Dong, Li and Bao, Hangbo and Yang, Nan and Zhou, Ming},
+  booktitle={Advances in Neural Information Processing Systems}, volume={33}, pages={5776--5788}, year={2020}}
+@misc{wang2022e5,
+  title={Text Embeddings by Weakly-Supervised Contrastive Pre-training},
+  author={Wang, Liang and Yang, Nan and Huang, Xiaolong and Jiao, Binxing and Yang, Linjun and Jiang, Daxin and Majumder, Rangan and Wei, Furu},
+  year={2022}, eprint={2212.03533}, archivePrefix={arXiv}}
+@misc{xiao2023cpack,
+  title={C-Pack: Packed Resources For General {Chinese} Embeddings},
+  author={Xiao, Shitao and Liu, Zheng and Zhang, Peitian and Muennighoff, Niklas and Lian, Defu and Nie, Jian-Yun},
+  year={2023}, eprint={2309.07597}, archivePrefix={arXiv}, note={Source of the BGE embedding models}}
+@misc{neelakantan2022cpt,
+  title={Text and Code Embeddings by Contrastive Pre-Training},
+  author={Neelakantan, Arvind and Xu, Tao and Puri, Raul and Radford, Alec and Han, Jesse Michael and Tworek, Jerry and Yuan, Qiming and Tezak, Nikolas and Kim, Jong Wook and Hallacy, Chris and others},
+  year={2022}, eprint={2201.10005}, archivePrefix={arXiv}}
+@inproceedings{ethayarajh2019contextual,
+  title={How Contextual are Contextualized Word Representations? {C}omparing the Geometry of {BERT}, {ELMo}, and {GPT}-2 Embeddings},
+  author={Ethayarajh, Kawin},
+  booktitle={Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing (EMNLP-IJCNLP)},
+  pages={55--65}, year={2019}, doi={10.18653/v1/D19-1006}}
+% == Frames (only needed if any frame-theory sentence is kept) ==
 @article{casazza2008fusion,
-  title={Fusion frames and infinite dimensional setup},
+  title={Fusion Frames and Distributed Processing},
   author={Casazza, Peter G. and Kutyniok, Gitta and Li, Shidong},
-  journal={Transactions of the American Mathematical Society},
-  volume={360},
-  number={5},
-  pages={2755--2787},
-  year={2008}
-}
-
+  journal={Applied and Computational Harmonic Analysis},
+  volume={25}, number={1}, pages={114--132}, year={2008}, doi={10.1016/j.acha.2007.10.001}}
+% == Kept unchanged at the authors' request ==
 @article{paul2026kashin,
   title={Kashin Frames as Information-Preserving Representations for Retrieval},
   author={Paul, Parag and Sarkar, Saurabh and Cheng, Eugene and Anand, Avinash and Chakraborty, Soumick},
   journal={SSRN Electronic Journal},
   year={2026},
   note={Preprint}
-}
-
-% ---- New / Replacement Grassmannian references ----
-@article{basri2011approximate,
-  title     = {Approximate Nearest Subspace Search},
-  author    = {Basri, Ronen and Hassner, Tal and Zelnik-Manor, Lihi},
-  journal   = {IEEE Transactions on Pattern Analysis and Machine Intelligence},
-  volume    = {33},
-  number    = {2},
-  pages     = {266--278},
-  year      = {2011},
-  doi       = {10.1109/TPAMI.2010.110}
-}
-
-@inproceedings{wang2013fast,
-  title     = {Fast Subspace Search via {Grassmannian} Based Hashing},
-  author    = {Wang, Xu and Atev, Stefan and Wright, John and Lerman, Gilad},
-  booktitle = {Proceedings of the IEEE International Conference on Computer Vision (ICCV)},
-  pages     = {2776--2783},
-  year      = {2013},
-  doi       = {10.1109/ICCV.2013.345}
-}
-
-@article{harandi2015extrinsic,
-  title     = {Extrinsic Methods for Coding and Dictionary Learning on {Grassmann} Manifolds},
-  author    = {Harandi, Mehrtash and Hartley, Richard and Shen, Chunhua and Lovell, Brian and Sanderson, Conrad},
-  journal   = {International Journal of Computer Vision},
-  volume    = {114},
-  number    = {2-3},
-  pages     = {113--136},
-  year      = {2015},
-  doi       = {10.1007/s11263-015-0833-x}
-}
-
-@inproceedings{harandi2013dictionary,
-  title     = {Dictionary Learning and Sparse Coding on {Grassmann} Manifolds: An Extrinsic Solution},
-  author    = {Harandi, Mehrtash and Sanderson, Conrad and Shen, Chunhua and Lovell, Brian},
-  booktitle = {Proceedings of the IEEE Conference on Computer Vision (ICCV)},
-  pages     = {3120--3127},
-  year      = {2013},
-  doi       = {10.1109/ICCV.2013.387}
-}
-
-@inproceedings{cetingul2009intrinsic,
-  title     = {Intrinsic Mean Shift for Clustering on {Stiefel} and {Grassmann} Manifolds},
-  author    = {Cetingul, Hasan Ertan and Vidal, Ren{\'e}},
-  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
-  pages     = {1896--1902},
-  year      = {2009},
-  doi       = {10.1109/CVPR.2009.5206806}
-}
-
-@inproceedings{wang2014lrr,
-  title     = {Low Rank Representation on {Grassmann} Manifolds},
-  author    = {Wang, Boyue and Hu, Yongli and Gao, Junbin and Sun, Yanfeng and Yin, Baocai},
-  booktitle = {Computer Vision -- ACCV 2014},
-  series    = {Lecture Notes in Computer Science},
-  volume    = {9003},
-  pages     = {81--96},
-  publisher = {Springer},
-  year      = {2015},
-  doi       = {10.1007/978-3-319-16865-4_6}
-}
-
-@article{bendokat2024handbook,
-  title     = {A {Grassmann} Manifold Handbook: Basic Geometry and Computational Aspects},
-  author    = {Bendokat, Thomas and Zimmermann, Ralf and Absil, P.-A.},
-  journal   = {Advances in Computational Mathematics},
-  volume    = {50},
-  number    = {1},
-  pages     = {6},
-  year      = {2024},
-  doi       = {10.1007/s10444-023-10090-8}
-}
-
-@misc{zhang2018grassmannian,
-  title         = {{Grassmannian} Learning: Embedding Geometry Awareness in Shallow and Deep Learning},
-  author        = {Zhang, Jiayao and Zhu, Guangxu and Heath, Robert W. and Huang, Kaibin},
-  year          = {2018},
-  eprint        = {1808.02229},
-  archivePrefix = {arXiv},
-  primaryClass  = {cs.LG}
-}
-
-@misc{delogne2025random,
-  title         = {Random Features for {Grassmannian} Kernels},
-  author        = {Delogne, R{\'e}mi and Jacques, Laurent},
-  year          = {2025},
-  eprint        = {2504.21533},
-  archivePrefix = {arXiv}
-}
-
-@article{delogne2026bounded,
-  title   = {Random Features for {Grassmannian} Kernel Approximation with Bounded Rank-One Projections},
-  author  = {Delogne, R{\'e}mi and Jacques, Laurent},
-  journal = {Transactions on Machine Learning Research},
-  year    = {2026},
-  note    = {arXiv:2608.04227}
-}
-
-@inproceedings{marrinan2014finding,
-  title     = {Finding the Subspace Mean or Median to Fit Your Need},
-  author    = {Marrinan, Tim and Draper, Bruce and Beveridge, J. Ross and Kirby, Michael and Peterson, Chris},
-  booktitle = {Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition (CVPR)},
-  pages     = {1082--1089},
-  year      = {2014},
-  doi       = {10.1109/CVPR.2014.142}
-}
-
-@inproceedings{stiverson2020subspace,
-  title     = {Subspace Quantization on the {Grassmannian}},
-  author    = {Stiverson, Shannon and Kirby, Michael and Peterson, Chris},
-  booktitle = {Advances in Self-Organizing Maps, Learning Vector Quantization, Clustering and Data Visualization (WSOM 2019)},
-  series    = {Advances in Intelligent Systems and Computing},
-  pages     = {251--260},
-  publisher = {Springer},
-  year      = {2020},
-  doi       = {10.1007/978-3-030-19642-4_25}
 }
