@@ -13,6 +13,21 @@
 \usepackage{enumitem}
 \usepackage{xurl}
 \usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\definecolor{euclid}{RGB}{232,244,253}
+\definecolor{grassbg}{RGB}{255,243,224}
+
+\setcounter{topnumber}{3}
+\setcounter{bottomnumber}{2}
+\setcounter{totalnumber}{5}
+\setcounter{dbltopnumber}{2}
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.7}
+\renewcommand{\textfraction}{0.08}
+\renewcommand{\floatpagefraction}{0.85}
+\renewcommand{\dbltopfraction}{0.9}
+\renewcommand{\dblfloatpagefraction}{0.85}
 
 \setlist{nosep}
 \setlist[itemize]{leftmargin=1.2em}
@@ -119,12 +134,42 @@ Partition-based approximate nearest neighbor indexes route a query by comparing 
 
 Dense retrieval embeds passages and searches them with an approximate nearest neighbor index~\cite{lewis2020rag,karpukhin2020dpr}. Inverted-file search assigns documents by $k$-means and probes the clusters whose centroids are closest to the query~\cite{sivic2003video,jegou2011product}. Product quantization, locally optimized codes, and graph navigation sit on top of that coarse step~\cite{ge2014opq,kalantidis2014lopq,malkov2018hnsw,fu2019nsg,johnson2019faiss,douze2024faiss,guo2020scann}.
 
-Centroid routing stores one vector per cluster. Contrastive embeddings are anisotropic~\cite{ethayarajh2019contextual}: with 32 clusters, the top 16 of 384 within-cluster directions carry \ExplainedLo\% to \ExplainedHi\% of the variance. Any 16 directions of an isotropic cloud carry $16/384 \approx 4\%$. We hold the partition fixed and change only the routing score. The three scores are cosine to the normalized centroid, the principal angle to a through-origin $k$-plane~\cite{basri2011approximate,wang2013fast}, and the Euclidean residual to the affine flat through the member mean along the top-$k$ principal directions. The flat is a classical local-PCA construction~\cite{bradley2000kplane,kambhatla1997localpca,tipping1999ppca,tipping1999mppca}. We do not introduce it. We measure it as a router.
+Centroid routing stores one vector per cluster. Contrastive embeddings are anisotropic~\cite{ethayarajh2019contextual}: with 32 clusters, the top 16 of 384 within-cluster directions carry \ExplainedLo\% to \ExplainedHi\% of the variance (Figure~\ref{fig:aniso}). Any 16 directions of an isotropic cloud carry $16/384 \approx 4\%$. We hold the partition fixed and change only the routing score. The three scores are cosine to the normalized centroid, the principal angle to a through-origin $k$-plane~\cite{basri2011approximate,wang2013fast}, and the Euclidean residual to the affine flat through the member mean along the top-$k$ principal directions. The flat is a classical local-PCA construction~\cite{bradley2000kplane,kambhatla1997localpca,tipping1999ppca,tipping1999mppca}. We do not introduce it. We measure it as a router.
 
 The comparison uses 6 BEIR datasets, MiniLM and BGE-small, and 5 $k$-means seeds~\cite{thakur2021beir,wadden2020scifact,reimers2019sbert,wang2020minilm,xiao2023cpack}. Differences are paired at the query. For any one comparison the 12 dataset/embedder pairs are one family, and a pair is counted only when Holm-Bonferroni rejects a two-sided percentile bootstrap at family-wise 5\%. Recall and nDCG are separate families. We do not further adjust across rows of a table. Configurations inside a FLOP budget are chosen on the complement of each query fold and reported on the held-out fold, so the budget table is not fit on the queries it evaluates.
 
 \section{Routing scores}
 \label{sec:method}
+
+The index is two levels on one shared partition (Figure~\ref{fig:pipeline}). MiniBatch $k$-means assigns each document to a cluster. The cluster stores its mean $\mu_c$ and a basis $U_c$ for the top-$k$ principal directions of the centered members. At query time every cluster receives one score, the $P$ lowest scores are opened, and the second level is exact cosine on that union. Cosine IVF, the linear angle, and the $k$-flat residual use the same partition and the same second level. Only the score changes.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  node distance=0.28cm and 0.22cm,
+  box/.style={draw, rounded corners=2pt, align=center, inner sep=2pt, minimum height=0.62cm, text width=2.05cm},
+  arr/.style={-{Latex}, thick}
+]
+  \node[box, fill=euclid] (emb) {corpus\\embeddings};
+  \node[box, fill=euclid, right=of emb] (km) {$k$-means\\partition};
+  \node[box, fill=grassbg, right=of km] (fit) {store $\mu_c$, $U_c$};
+  \node[box, fill=euclid, below=of emb] (cos) {cosine\\to $\bar\mu_c$};
+  \node[box, fill=grassbg, below=of km] (lin) {angle to\\through-origin $U_c$};
+  \node[box, fill=grassbg, below=of fit] (flat) {$k$-flat\\residual};
+  \node[box, fill=euclid, below=of lin] (ref) {exact cosine\\on the union};
+  \draw[arr] (emb)--(km);
+  \draw[arr] (km)--(fit);
+  \draw[arr] (km)--(cos);
+  \draw[arr] (fit)--(lin);
+  \draw[arr] (fit)--(flat);
+  \draw[arr] (cos)--(ref);
+  \draw[arr] (lin)--(ref);
+  \draw[arr] (flat)--(ref);
+\end{tikzpicture}
+\caption{Two-level index on one shared partition. The three scores open the same lists. The second level is exact cosine.}
+\label{fig:pipeline}
+\end{figure}
 
 Documents and queries are L2-normalized. MiniBatch $k$-means (batch 1024, \texttt{n\_init} 3) assigns documents to $C$ clusters. For cluster $c$, $\mu_c$ is the mean of its members, recomputed from the labels. An empty cluster uses the MiniBatch $k$-means center. $\bar\mu_c = \mu_c/\|\mu_c\|_2$ is the centroid used by cosine IVF. The columns of $U_c$ are the top-$k$ right singular vectors of the centered members, so they are orthonormal principal directions in $\mathbb{R}^m$. If the cluster has fewer than $k$ members, the missing columns are zero. The affine flat is $F_c = \mu_c + \mathrm{span}(U_c)$. A query, viewed as a 1-dimensional subspace, has one principal angle with a linear $k$-plane through the origin~\cite{edelman1998grassmannian}. That angle is the linear router. The same directions $U_c$ are used, but the flat does not pass through the origin and does not live on the Grassmannian.
 
@@ -135,6 +180,16 @@ All three routers rank clusters by an ascending score and probe the $P$ smallest
   d_{\mathrm{flat}}(q, F_c)^2 &= \|q - \mu_c\|_2^2 - \|U_c^\top (q - \mu_c)\|_2^2. \label{eq:kflat}
 \end{align}
 At $k = 0$, \eqref{eq:kflat} is squared Euclidean distance to $\mu_c$. Because $\|\mu_c\|_2$ varies across clusters, that ranking differs from cosine to $\bar\mu_c$. For a unit query and an orthonormal $U_c$, $\cos\theta_c = \|U_c^\top q\|_2$ is the cosine of the single principal angle, so \eqref{eq:grass} ranks by that angle. Appendix~\ref{app:ppca} writes the probabilistic-PCA score we actually compute~\cite{tipping1999ppca,tipping1999mppca}. It is worse than cosine. Appendix~\ref{app:why} gives a sufficient condition for the flat to probe a cluster that contains a given document. Satisfying it is not a guarantee that the neighbor is retrieved.
+
+\subsection{Connection to fusion frames}
+\label{subsec:fusion-frames}
+
+A fusion frame is a weighted collection of subspaces whose projectors satisfy a frame inequality~\cite{casazza2008fusion}. For subspaces $\mathcal{W}_c$ with weights $v_c > 0$ and orthogonal projectors $P_{\mathcal{W}_c}$,
+\begin{equation}
+  A \|x\|_2^2 \le \sum_{c=1}^{C} v_c^2 \|P_{\mathcal{W}_c} x\|_2^2 \le B \|x\|_2^2
+  \label{eq:fusion}
+\end{equation}
+for some $A, B > 0$. When the subspaces have a common dimension and the bounds are tight, the projectors are an overcomplete representation of $\mathbb{R}^m$. That is the geometry a through-origin router would need. The scores in \eqref{eq:cosine}--\eqref{eq:kflat} ask a weaker question: whether these $k$-means clusters are close enough to that picture for a subspace score to help. They are anisotropic, not tight flats, and the through-origin score is the wrong router on this collection.
 
 A multiply-add counts as one operation. Cosine and Euclidean routing then cost $Cm$ operations. The linear score costs $Cmk$. The flat costs $Cm(k+1)$ after precomputing $U_c^\top\mu_c$, because $U_c^\top(q-\mu_c) = U_c^\top q - U_c^\top\mu_c$ and $\|q-\mu_c\|_2^2$ reuses one inner product with $\mu_c$. The scan costs $n_{\mathrm{cand}}\, m$ operations. Brute force costs $Nm$. We report both the total (routing plus scan) and the scan alone, as a fraction of $Nm$. The scan-only budget is a proxy for a large corpus, where scoring $C$ centroids is small next to the scan. On these collections $C/N$ is not small, and the two budgets disagree. Extra memory for the bases is $Cmk$ floats. The int8 variant stores each basis vector with one symmetric scale, its maximum absolute coordinate divided by 127, which is $Cmk$ bytes plus $Ck$ scales.
 
@@ -152,6 +207,18 @@ For a budget in these multiply-adds, each family (cosine IVF over $C,P$; $k$-fla
 \section{Results}
 \label{sec:results}
 
+\subsection{Structure: mild, not dramatic}
+\label{sec:structure}
+
+With $C = 32$, the top 16 of 384 within-cluster directions carry \ExplainedLo\% to \ExplainedHi\% of the variance (Table~\ref{tab:aniso}). Sixteen directions of an isotropic cloud carry about 4\%. The clusters are anisotropic, and they are not a collapse onto a $k$-flat: most of the variance sits outside those 16 directions. The Spearman correlation of that fraction with the $k = 16$ recall gap is \SpearmanR{} ($p = \SpearmanRp$, $n = 12$); with the nDCG gap it is \SpearmanN{} ($p = \SpearmanNp$). Those are ordinary Spearman tests on 12 pairs, not the Holm bootstrap, and we do not treat them as established. Figure~\ref{fig:aniso} plots the twelve pairs.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\columnwidth]{figures/fig_aniso.pdf}
+\caption{Explained variance at $k = 16$, $C = 32$, against the $k = 16$ gap at $P = 4$. The $p$-values are ordinary Spearman tests on 12 pairs, not the bootstrap Holm test used in the tables.}
+\label{fig:aniso}
+\end{figure}
+
 \subsection{Equal clusters and probes}
 \label{sec:equal}
 
@@ -162,7 +229,7 @@ The $k$-flat mean then rises with $k$. Recall gaps are \KFourR, \KEightR, \KSixt
 \input{generated/table_routers.tex}
 \input{generated/table_perpair.tex}
 
-\begin{figure*}[t]
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_kcurve.pdf}
 \caption{Gap versus cosine IVF at $P = 4$. Lines are unweighted means over the twelve pairs. Faint curves are the individual pairs. $k = 0$ is Euclidean distance to $\mu_c$. The annotation is the Holm rejection count for recall at $C = 32$, $k = 16$.}
@@ -178,7 +245,7 @@ With scan cost only, the ordering changes. At 10\% of brute force the held-out r
 
 \input{generated/table_matched.tex}
 
-\begin{figure*}[t]
+\begin{figure*}[!t]
 \centering
 \includegraphics[width=\textwidth]{figures/fig_cost.pdf}
 \caption{Held-out gap, $k$-flat minus cosine, for the configuration chosen on the complementary query folds. Faint curves are pairs. The line is the mean over pairs that have a feasible configuration. A negative gap favors cosine. This is not an envelope fit on the evaluation queries.}
@@ -194,22 +261,25 @@ On the seed-0 partition, FAISS HNSW ($M = 32$, $\mathrm{efSearch} = 16$) has hig
 
 The one exception on recall is FiQA with BGE: the NumPy router has 89.8\% and HNSW has 88.7\% (Table~\ref{tab:ann}). That count is a comparison of point estimates on one seed, not the bootstrap test above, and the $k$-flat column is not the five-seed mean in Table~\ref{tab:perpair}. The latency comparison is not implementation-matched: FAISS is C++, and our second stage walks cluster slices in Python. The route-only portion of the $k = 16$ score is \RouteUsLo{} to \RouteUsHi{} microseconds, against end-to-end NumPy times of 0.059 to 0.313 ms in that table. Under the FLOP model, the flat is a better coarse score than cosine at fixed scan cost and a worse use of arithmetic than a finer cosine partition when routing is charged. It is not a better index than HNSW at these scales. ScaNN was not run~\cite{guo2020scann}.
 
-\begin{figure*}[t]
+\begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{figures/fig_ann.pdf}
+\includegraphics[width=\textwidth]{figures/fig_ann.pdf}
 \caption{Recall@10 against single-thread latency (seed 0, batch size 1, median of three passes). HNSW varies $\mathrm{efSearch}$. IVF-Flat varies lists and probes. The NumPy points are a Python prototype. FAISS is C++.}
 \label{fig:ann}
 \end{figure*}
 
-fp16 bases match fp32. int8 changes recall by \CheapIntDR{} points and nDCG by \CheapIntDN{} points (Table~\ref{tab:cheap}). A single basis shared by every cluster is much worse (\CheapSharedDR{} recall points at $k = 16$). Per-cluster adaptive $k$ does not beat a fixed $k = 16$. The Spearman correlation between explained variance at $k = 16$ and the recall gap is \SpearmanR{} ($p = \SpearmanRp$, $n = 12$); with the nDCG gap it is \SpearmanN{} ($p = \SpearmanNp$). Those are ordinary Spearman tests on 12 pairs, not the bootstrap Holm test, and we do not treat them as established. Table~\ref{tab:aniso} lists the twelve fractions.
+fp16 bases match fp32. int8 changes recall by \CheapIntDR{} points and nDCG by \CheapIntDN{} points (Table~\ref{tab:cheap}). A single basis shared by every cluster is much worse (\CheapSharedDR{} recall points at $k = 16$). Per-cluster adaptive $k$ does not beat a fixed $k = 16$. Table~\ref{tab:aniso} lists the twelve fractions behind Figure~\ref{fig:aniso}.
 
-\begin{figure*}[t]
-\centering
-\includegraphics[width=\textwidth]{figures/fig_aniso.pdf}
-\caption{Explained variance at $k = 16$, $C = 32$, against the $k = 16$ gap at $P = 4$. The $p$-values are ordinary Spearman tests on 12 pairs, not the bootstrap Holm test used in the tables.}
-\label{fig:aniso}
-\end{figure*}
-\clearpage
+\subsection{Takeaways}
+\label{sec:takeaways}
+
+\begin{enumerate}
+  \item The clusters are anisotropic and not tight flats. Sixteen of 384 directions hold \ExplainedLo\% to \ExplainedHi\% of the within-cluster variance, against about 4\% in an isotropic cloud.
+  \item The through-origin score drops $\mu_c$. Its recall gap is \GrassR{} points, and the recall test rejects for cosine on all \GrassDn{} pairs.
+  \item Euclidean distance to $\mu_c$ ($k = 0$) has recall gap \KZeroR{} points. The gain on the primary slice for $k \ge 8$ is the local directions: \KSixteenR{} recall points and \KSixteenN{} nDCG points at $k = 16$, with Holm rejections on \KSixteenUp{} and \KSixteenNUp{} of 12 pairs.
+  \item On the planted subspaces the linear score is the right router when the partition is the true planes (Appendix~\ref{app:synthetic}). Unsupervised $k$-means on these embeddings does not produce that partition.
+  \item Once routing FLOPs are counted, held-out cross-validation gives the budget to a finer cosine partition (recall gap \TotalTwentyR{} points at 20\% of brute force). At a 10\% scan budget the held-out nDCG gap is \ScanTenND{} points. Where the scan dominates and the quantity of interest is nDCG@10, the $k$-flat score is a reasonable candidate for the coarse stage. It is not a replacement for HNSW at these scales.
+\end{enumerate}
 
 \section{Discussion and related work}
 \label{sec:discuss}
@@ -284,24 +354,19 @@ Table~\ref{tab:deltas} gives the pair-level recall gap for every router at $C = 
 \input{generated/table_deltas.tex}
 \input{generated/table_kcurve.tex}
 
-\begin{figure*}[t]
+\begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{figures/fig_scan_recall.pdf}
+\includegraphics[width=\textwidth,height=0.43\textheight,keepaspectratio]{figures/fig_scan_recall.pdf}
 \caption{Neighbor recall@10 against the fraction of the corpus scanned. On this scale cosine and the $k$-flat nearly overlap. Linear Grassmannian routing stays far below. It was not run at $C \in \{128, 256\}$.}
 \label{fig:scan}
 \end{figure*}
 
-\begin{figure*}[t]
+\begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth,height=0.78\textheight,keepaspectratio]{figures/fig_scan_ndcg.pdf}
+\includegraphics[width=\textwidth,height=0.50\textheight,keepaspectratio]{figures/fig_scan_ndcg.pdf}
 \caption{nDCG@10 against the fraction scanned, same routers as Figure~\ref{fig:scan}.}
 \label{fig:scanndcg}
 \end{figure*}
-\clearpage
-
-\input{generated/table_aniso.tex}
-\input{generated/table_cheap.tex}
-\clearpage
 
 \section{Synthetic positive control}
 \label{app:synthetic}
@@ -310,11 +375,31 @@ On a planted model the linear router is the right score. We plant 20 random 4-pl
 
 Under the oracle partition, linear routing and the $k$-flat residual both sit at 98.0, 98.0, and 99.5 recall for $P = 1, 2, 4$, while the centroid sits at 21.0, 36.5, and 36.5. Under $k$-means the linear score falls to 23.5, 42.5, and 66.0, the centroid leads at 49.0, 69.5, and 82.5, and the $k$-flat residual is 50.5, 71.5, and 82.5. Cluster means concentrate near the origin, so the inner product with $\mu_c$ carries little information when the labels really are subspaces. Unsupervised $k$-means on text embeddings does not produce that partition. Figure~\ref{fig:synthetic} is the curve from that run.
 
-\begin{figure}[t]
+\begin{figure}[H]
 \centering
 \includegraphics[width=\columnwidth]{figures/fig_synthetic.pdf}
 \caption{Planted subspaces, legacy run. Not re-run.}
 \label{fig:synthetic}
 \end{figure}
+
+\section{Failure modes and implementation notes}
+\label{app:failures}
+
+\paragraph{Centroid scores on planted subspaces.}
+In the planted model the cluster means sit near the origin, so cosine to $\mu_c$ is a weak score and the angle to the planted plane matches the generator. Under the oracle labels the linear score and the $k$-flat residual both sit at 98.0, 98.0, and 99.5 recall for $P = 1, 2, 4$, while the centroid sits at 21.0, 36.5, and 36.5 (Appendix~\ref{app:synthetic}).
+
+\clearpage
+\twocolumn[{%
+\input{generated/table_aniso.tex}
+\vspace{0.2em}
+\input{generated/table_cheap.tex}
+\par
+}]
+
+\paragraph{Through-origin scores on $k$-means clusters.}
+On the BEIR slices the linear score discards the offset. The recall gap versus cosine IVF is \GrassR{} points on the primary slice, and the linear curve stays below cosine across the scanned fraction in Figure~\ref{fig:scan}. The $k$-flat residual keeps the offset. At $k = 0$ it is Euclidean distance to $\mu_c$ and the recall gap is \KZeroR{} points. The primary-slice gain for $k \ge 8$ is the local directions.
+
+\paragraph{Implementation.}
+The released grid is \path{experiments/v2/}. MiniBatch $k$-means is scikit-learn, the three scores are NumPy, and the latency table uses FAISS HNSW and IVF-Flat. \path{experiments/v2/reproduce.py} rebuilds the tables and figures from \path{summary.json} and \path{query_level.json}. The synthetic control is the legacy single-seed script and was not re-run.
 
 \end{document}
