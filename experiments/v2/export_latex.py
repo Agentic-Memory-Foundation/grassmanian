@@ -64,6 +64,9 @@ def ci_pair(triple, digits=1):
 
 
 def sig_counts(summary, router, metric_key, C=32, P=4):
+    holm = summary.get("_holm_nd")
+    if holm is not None and metric_key == "d_ndcg_vs_cos":
+        return holm[(router, C, P)]
     up = down = 0
     for ds in DS_ORDER:
         for emb in EMB_ORDER:
@@ -72,6 +75,59 @@ def sig_counts(summary, router, metric_key, C=32, P=4):
             up += int(lo > 0)
             down += int(hi < 0)
     return up, down
+
+
+def apply_query_level(summary):
+    """Replace uncorrected CI counts with Holm rejections, and leaked envelopes with cross-validation."""
+    path = ROOT / "results" / "query_level.json"
+    if not path.exists():
+        raise SystemExit("missing experiments/v2/results/query_level.json")
+    ql = json.loads(path.read_text())
+    summary["_ql"] = ql
+    summary["_holm_nd"] = {}
+    summary["_holm_flags"] = {}
+    for comp in ql["comparisons"]:
+        key = f"{comp['router']}|C{comp['C']}|P{comp['P']}"
+        if comp["metric"] == "rec":
+            row = summary["kcurve"].get(key)
+            if row is None:
+                continue
+            if abs(row["d_recall"] - comp["mean"]) > 0.002:
+                raise SystemExit(f"query-level mean drifted for {key}: {row['d_recall']} vs {comp['mean']}")
+            row["n_sig_up"] = comp["n_up"]
+            row["n_sig_down"] = comp["n_down"]
+        else:
+            summary["_holm_nd"][(comp["router"], comp["C"], comp["P"])] = (comp["n_up"], comp["n_down"])
+        summary["_holm_flags"][(comp["router"], comp["C"], comp["P"], comp["metric"])] = {
+            pair["pair"]: pair["reject"] for pair in comp["pairs"]
+        }
+
+
+def heldout_summary(summary, kind, budget):
+    ql = summary.get("_ql")
+    if ql is None:
+        return None
+    rec = nd = None
+    for entry in ql["heldout"]:
+        if entry["kind"] != kind or abs(float(entry["budget"]) - float(budget)) > 1e-9:
+            continue
+        if entry["metric"] == "recall":
+            rec = entry
+        elif entry["metric"] == "ndcg":
+            nd = entry
+    if rec is None or nd is None or rec["mean"] is None or nd["mean"] is None:
+        return None
+    return dict(
+        n=rec["n_pairs"],
+        dr=rec["mean"],
+        dn=nd["mean"],
+        r_up=rec["n_up"],
+        r_dn=rec["n_down"],
+        r_tie=rec["n_tie"],
+        n_up=nd["n_up"],
+        n_dn=nd["n_down"],
+        n_tie=nd["n_tie"],
+    )
 
 
 def matched_rows(summary, cost, budget):
@@ -190,7 +246,17 @@ def write_numbers(summary):
         ("TotalTwenty", "cost_total", 0.20),
         ("TotalForty", "cost_total", 0.40),
     ):
-        sm = matched_summary(matched_rows(summary, cost, budget))
+        sm = heldout_summary(summary, cost, budget)
+        if sm is None:
+            lines.append(macro(f"{name}NPairs", "0"))
+            lines.append(macro(f"{name}R", "n/a"))
+            lines.append(macro(f"{name}ND", "n/a"))
+            lines.append(macro(f"{name}RUp", "0"))
+            lines.append(macro(f"{name}RDn", "0"))
+            lines.append(macro(f"{name}RTie", "0"))
+            lines.append(macro(f"{name}NUp", "0"))
+            lines.append(macro(f"{name}NDn", "0"))
+            continue
         lines.append(macro(f"{name}NPairs", str(sm["n"])))
         lines.append(macro(f"{name}R", pct(sm["dr"], True, 1)))
         lines.append(macro(f"{name}ND", pct(sm["dn"], True, 2)))
@@ -259,10 +325,10 @@ def write_numbers(summary):
     print("negative k16 recall:", ", ".join(neg))
 
 
-def cell_delta(triple):
+def cell_delta(triple, reject=False):
     mean, lo, hi = triple
     body = f"{pct(mean, True)} [{pct(lo, True)}, {pct(hi, True)}]"
-    if lo > 0 or hi < 0:
+    if reject:
         return f"\\textbf{{{body}}}"
     return body
 
@@ -279,7 +345,7 @@ def write_tables(summary):
         )
     table_routers = r"""\begin{table}[t]
 \centering
-\caption{Mean gap versus cosine IVF at $C{=}32$, $P{=}4$, unweighted over 12 dataset/embedder pairs. Counts are pairs whose paired 95\% CI lies entirely above zero, then entirely below zero, separately for recall and for nDCG. Gaps are percentage points.}
+\caption{Mean gap versus cosine IVF at $C{=}32$, $P{=}4$, unweighted over 12 dataset/embedder pairs. Counts are Holm-Bonferroni rejections at family-wise 5\% across those 12 pairs (positive, then negative). Recall and nDCG are separate families. The test is a two-sided percentile bootstrap of the seed-averaged per-query difference, 2000 resamples. Gaps are percentage points.}
 \label{tab:routers}
 \small
 \begin{tabular}{lrrrr}
@@ -300,14 +366,16 @@ Router & $\Delta$R@10 & R up/down & $\Delta$nDCG@10 & n up/down \\
             cos = summary["main"][f"{ds}|{emb}|cos|C32|P4"]
             kf = summary["main"][f"{ds}|{emb}|kflat_k16|C32|P4"]
             blob = json.load(open(RES / f"routing__{ds}__{emb}.json"))
+            flags = summary["_holm_flags"]
+            pair = f"{ds}|{emb}"
             body.append(
                 f"{DS_NAME[ds]} & {EMB_NAME[emb]} & {pct(cos['recall'][0])} & {pct(kf['recall'][0])} "
-                f"& {cell_delta(kf['d_recall_vs_cos'])} & {pct(cos['ndcg'][0])} & {pct(kf['ndcg'][0])} "
-                f"& {cell_delta(kf['d_ndcg_vs_cos'])} & {pct(blob['exact_ndcg'])} \\\\"
+                f"& {cell_delta(kf['d_recall_vs_cos'], flags[('kflat_k16', 32, 4, 'rec')][pair])} & {pct(cos['ndcg'][0])} & {pct(kf['ndcg'][0])} "
+                f"& {cell_delta(kf['d_ndcg_vs_cos'], flags[('kflat_k16', 32, 4, 'ndcg')][pair])} & {pct(blob['exact_ndcg'])} \\\\"
             )
     table_per = r"""\begin{table}[t]
 \centering
-\caption{Cosine IVF and the $k{=}16$ k-flat router at $C{=}32$, $P{=}4$. All figures are percentages. Brackets are paired 95\% bootstrap CIs on the difference (k-flat minus cosine). Bold intervals exclude zero. Exact is full cosine search on the evaluated document set, not a published full-corpus BEIR number. TREC-COVID uses 50 queries, so its intervals are wide.}
+\caption{Cosine IVF and the $k{=}16$ k-flat router at $C{=}32$, $P{=}4$. All figures are percentages. Brackets are uncorrected 95\% percentile bootstrap intervals on the difference (k-flat minus cosine). Bold marks a Holm-Bonferroni rejection at family-wise 5\% across the 12 pairs, for that metric. An interval can exclude zero without being bold. Exact is full cosine search on the evaluated document set, not a published full-corpus BEIR number. TREC-COVID uses 50 queries, so its intervals are wide.}
 \label{tab:perpair}
 \footnotesize
 \setlength{\tabcolsep}{3.2pt}
@@ -330,11 +398,12 @@ Data & Model & R cos & R $k$16 & $\Delta$R [CI] & n cos & n $k$16 & $\Delta$n [C
             cells = [f"{DS_NAME[ds]}", EMB_NAME[emb]]
             for key in header_routers:
                 triple = summary["main"][f"{ds}|{emb}|{key}|C32|P4"]["d_recall_vs_cos"]
-                cells.append(cell_delta(triple))
+                reject = summary["_holm_flags"][(key, 32, 4, "rec")][f"{ds}|{emb}"]
+                cells.append(cell_delta(triple, reject))
             drows.append(" & ".join(cells) + r" \\")
     table_delta = r"""\begin{table}[t]
 \centering
-\caption{Recall@10 gap versus cosine IVF, in points, at $C{=}32$, $P{=}4$. Brackets are paired 95\% CIs. Bold intervals exclude zero.}
+\caption{Recall@10 gap versus cosine IVF, in points, at $C{=}32$, $P{=}4$. Brackets are uncorrected 95\% percentile bootstrap intervals. Bold marks a Holm-Bonferroni rejection at family-wise 5\% across the 12 pairs for that column.}
 \label{tab:deltas}
 \scriptsize
 \setlength{\tabcolsep}{2.4pt}
@@ -361,25 +430,24 @@ Data & Model & $k{=}0$ & Grass. & $k{=}4$ & $k{=}8$ & $k{=}16$ & $k{=}32$ & PPCA
         ("10\\% total", "cost_total", 0.10, None),
         ("20\\% total", "cost_total", 0.20, None),
         ("40\\% total", "cost_total", 0.40, None),
+        ("2\\% total", "cost_total", 0.02, None),
     ):
-        sm = matched_summary(matched_rows(summary, cost, budget))
+        sm = heldout_summary(summary, cost, budget)
         if sm is None:
-            mrows.append(f"{label} & 0 & n/a & n/a \\\\")
+            mrows.append(f"{label} & 0 & no feasible config & no feasible config \\\\")
             continue
         mrows.append(
-            f"{label} & {sm['n']} & {pct(sm['dr'], True)} ({sm['r_up']}/{sm['r_dn']}/{sm['r_tie']}) "
-            f"& {pct(sm['dn'], True, 2)} ({sm['n_up']}/{sm['n_dn']}/{sm['n_tie']}) \\\\"
+            f"{label} & {sm['n']} & {pct(sm['dr'], True)} ({sm['r_up']}/{sm['r_dn']}) "
+            f"& {pct(sm['dn'], True, 2)} ({sm['n_up']}/{sm['n_dn']}) \\\\"
         )
-    # 2% total is absent
-    mrows.append("2\\% total & 0 & no pair under budget & no pair under budget \\\\")
     table_matched = r"""\begin{table}[t]
 \centering
-\caption{k-flat minus cosine IVF inside a FLOP budget, as a fraction of brute-force cost $Nm$. Recall compares the recall-maximizing configuration of each family. nDCG compares the nDCG-maximizing configuration. Parentheses are pairs higher / lower / tied. The 5\% total-cost row has six pairs (FiQA, SciDocs, TREC-COVID, both embedders): on the three smaller corpora every configuration exceeds 5\% of brute force. Both families are chosen on the evaluation queries, so these are envelopes, not a frozen hyperparameter.}
+\caption{Held-out gap, k-flat minus cosine IVF, inside a multiply-add budget. For each of 5 query folds the config is chosen on the other folds and scored on the held-out fold. Recall and nDCG are selected separately. Parentheses are Holm-Bonferroni rejections across the pairs that have a feasible config on every fold (positive, then negative). When fewer than 12 pairs are feasible, that smaller set is the family. A pair whose held-out mean is positive need not reject.}
 \label{tab:matched}
 \small
 \begin{tabular}{lrlr}
 \toprule
-Budget & Pairs & $\Delta$ recall (up/down/tie) & $\Delta$ nDCG (up/down/tie) \\
+Budget & Pairs & $\Delta$ recall (Holm up/down) & $\Delta$ nDCG (Holm up/down) \\
 \midrule
 """ + "\n".join(mrows) + r"""
 \bottomrule
@@ -540,7 +608,7 @@ Dataset & Docs & Full & Sub. & Q & Q full & Exact MiniLM & Exact BGE \\
             krows.append(" & ".join(cells) + r" \\")
     table_kc = r"""\begin{table}[t]
 \centering
-\caption{Unweighted mean gap versus cosine IVF, as recall/nDCG in points, with the number of pairs whose recall CI is above zero in parentheses. Grassmannian routing was not run at $C \in \{128, 256\}$. When $P{=}C$ the probed set is the whole corpus and every gap is zero.}
+\caption{Unweighted mean gap versus cosine IVF, as recall/nDCG in points. The parenthesis is the number of Holm-Bonferroni rejections in the positive direction for recall, across the 12 pairs. Grassmannian routing was not run at $C \in \{128, 256\}$. When $P{=}C$ the probed set is the whole corpus and every gap is zero.}
 \label{tab:kcurve}
 \scriptsize
 \setlength{\tabcolsep}{3pt}
@@ -560,6 +628,7 @@ $C$ & $P$ & $k{=}0$ & $k{=}8$ & $k{=}16$ & $k{=}32$ & Grass. \\
 def main():
     summary = load_summary()
     check_brief(summary)
+    apply_query_level(summary)
     write_numbers(summary)
     write_tables(summary)
 

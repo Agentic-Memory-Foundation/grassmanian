@@ -81,6 +81,7 @@ for C in CS_IVF:
                 key = f"{name}|C{C}|P{P}|s{seed}"
                 arrays["rec|" + key] = rec.astype(np.float32)
                 arrays["ndcg|" + key] = nd.astype(np.float32)
+                arrays["ncand|" + key] = ncand.astype(np.float32)
                 configs.append(dict(router=name, C=C, P=P, seed=seed, recall=float(rec.mean()),
                     ndcg=float(nd.mean()), cand_frac=float(ncand.mean() / N),
                     flops_route=flops[name], flops_scan=float(ncand.mean() * m),

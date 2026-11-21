@@ -1,19 +1,19 @@
 \begin{table}[t]
 \centering
-\caption{Mean gap versus cosine IVF at $C{=}32$, $P{=}4$, unweighted over 12 dataset/embedder pairs. Counts are pairs whose paired 95\% CI lies entirely above zero, then entirely below zero, separately for recall and for nDCG. Gaps are percentage points.}
+\caption{Mean gap versus cosine IVF at $C{=}32$, $P{=}4$, unweighted over 12 dataset/embedder pairs. Counts are Holm-Bonferroni rejections at family-wise 5\% across those 12 pairs (positive, then negative). Recall and nDCG are separate families. The test is a two-sided percentile bootstrap of the seed-averaged per-query difference, 2000 resamples. Gaps are percentage points.}
 \label{tab:routers}
 \small
 \begin{tabular}{lrrrr}
 \toprule
 Router & $\Delta$R@10 & R up/down & $\Delta$nDCG@10 & n up/down \\
 \midrule
-Euclidean centroid ($k{=}0$) & -1.2 & 0/8 & -0.3 & 0/6 \\
+Euclidean centroid ($k{=}0$) & -1.2 & 0/7 & -0.3 & 0/1 \\
 Linear Grassmannian ($k{=}8$) & -32.2 & 0/12 & -11.1 & 0/12 \\
-$k$-flat, $k{=}4$ & +0.0 & 4/3 & +0.3 & 1/0 \\
-$k$-flat, $k{=}8$ & +0.9 & 5/1 & +0.6 & 4/0 \\
-$k$-flat, $k{=}16$ & +1.7 & 9/0 & +1.3 & 6/0 \\
-$k$-flat, $k{=}32$ & +2.2 & 9/0 & +1.9 & 8/0 \\
-PPCA likelihood ($k{=}16$) & -3.7 & 2/6 & -0.4 & 2/2 \\
+$k$-flat, $k{=}4$ & +0.0 & 3/2 & +0.3 & 0/0 \\
+$k$-flat, $k{=}8$ & +0.9 & 5/1 & +0.6 & 1/0 \\
+$k$-flat, $k{=}16$ & +1.7 & 8/0 & +1.3 & 6/0 \\
+$k$-flat, $k{=}32$ & +2.2 & 8/0 & +1.9 & 6/0 \\
+PPCA likelihood ($k{=}16$) & -3.7 & 2/5 & -0.4 & 2/2 \\
 \bottomrule
 \end{tabular}
 \end{table}

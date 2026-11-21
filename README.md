@@ -6,21 +6,23 @@ Local principal directions as a routing signal for partitioned dense retrieval. 
 
 ## Claim in one line
 
-On a shared k-means partition, residual distance to the cluster's affine k-flat beats cosine-to-centroid IVF at equal clusters and probes, and the mean gain grows with k. Linear Grassmannian routing, which drops the cluster offset, does not. Once routing FLOPs are counted on these small corpora, a finer cosine IVF wins. At a fixed scan budget the k-flat score keeps neighbor recall in the same range and raises nDCG@10. HNSW remains stronger on recall, and the latency numbers are not an implementation-matched comparison.
+On a shared k-means partition, residual distance to the cluster's affine k-flat beats cosine-to-centroid IVF at equal clusters and probes, and the mean gain grows with k. Linear Grassmannian routing, which drops the cluster offset, does not. Once routing FLOPs are counted on these small corpora, a finer cosine IVF wins on the held-out queries. At a fixed scan budget the held-out gap favors the k-flat score. HNSW remains stronger on recall, and the latency numbers are not an implementation-matched comparison.
 
 ## Headline numbers
 
-Unweighted mean over 6 BEIR datasets and 2 embedders (MiniLM-L6-v2, bge-small-en-v1.5), 5 k-means seeds, C = 32, P = 4. Gaps are k-flat (or the named router) minus cosine IVF. Brackets are pairs whose paired 95% bootstrap interval lies entirely above zero, then entirely below zero.
+Unweighted mean over 6 BEIR datasets and 2 embedders (MiniLM-L6-v2, bge-small-en-v1.5), 5 k-means seeds, C = 32, P = 4. Gaps are k-flat (or the named router) minus cosine IVF.
 
-- Euclidean centroid (k = 0): -1.2 recall points (0 up, 8 down), -0.3 nDCG@10.
-- Linear Grassmannian (k = 8): -32.2 recall, -11.1 nDCG (0 up, 12 down on both).
-- k-flat, k = 8 / 16 / 32: +0.9 / +1.7 / +2.2 recall and +0.6 / +1.3 / +1.9 nDCG. At k = 16 the recall interval is above zero in 9 of 12 pairs; the nDCG interval is above zero in 6 of 12.
-- With routing plus scan charged, at 20% of brute force the best k-flat configuration is -4.6 recall points (0 of 12 higher).
-- At a 10% scan budget the nDCG envelope is +1.58 points (12 of 12 higher). Recall is +1.0 (8 higher, 3 lower, 1 tie).
+Every rejection count below is the same test: a two-sided percentile bootstrap of the seed-averaged per-query difference (2000 resamples, Generator seed 0), with Holm-Bonferroni control across the 12 dataset/embedder pairs at family-wise 5%. Recall and nDCG are separate families. The interval printed in a table is the uncorrected 2.5 and 97.5 percentiles. A pair is counted only when Holm rejects. An interval can exclude zero without being counted.
+
+- Euclidean centroid (k = 0): -1.2 recall points. Holm rejects for cosine on 7 of 12 pairs and for the flat on 0. nDCG@10 is -0.3.
+- Linear Grassmannian (k = 8): -32.2 recall, -11.1 nDCG. Holm rejects for cosine on all 12 pairs, for both metrics.
+- k-flat, k = 8 / 16 / 32: +0.9 / +1.7 / +2.2 recall and +0.6 / +1.3 / +1.9 nDCG. At k = 16 Holm rejects for the flat on 8 of 12 pairs for recall and on 6 of 12 for nDCG.
+- Budgeted configurations are chosen by 5-fold cross-validation on the queries and scored on the held-out fold. At 20% of brute-force cost (routing plus scan) the held-out recall gap is -4.6 points (12 pairs; Holm 0 positive, 11 negative). At 2% of that cost no pair has a feasible configuration on every fold.
+- At a 10% scan budget the held-out nDCG gap is +1.38 points (Holm 7 positive, 0 negative) and the held-out recall gap is +1.0 points (Holm 7 positive, 1 negative).
 - int8 bases: -0.02 recall points and +0.00 nDCG versus fp32 k = 16.
-- HNSW (efSearch = 16) has higher recall than the NumPy k-flat router in 11 of 12 pairs, on a single seed. The route-only k = 16 score is 14 to 22 microseconds.
+- HNSW (efSearch = 16) has higher recall than the NumPy k-flat router in 11 of 12 pairs, on a single seed. That count is a comparison of point estimates, not the bootstrap test. The route-only k = 16 score is 14 to 22 microseconds.
 
-These envelopes pick the best grid point on the evaluation queries. FiQA and TREC-COVID are subsampled (TREC-COVID keeps 17,537 judged documents out of 30,000). nDCG is not a full-corpus BEIR number.
+FiQA and TREC-COVID are subsampled (TREC-COVID keeps 17,537 judged documents out of 30,000). nDCG is not a full-corpus BEIR number.
 
 The planted-subspace control (legacy, not re-run) still shows linear Grassmannian routing at 98.0 recall when the partition is the true through-origin subspaces, and 23.5 under k-means, at P = 1 and k = 4.
 
@@ -42,7 +44,7 @@ python experiments/v2/reproduce.py
 make paper
 ```
 
-`reproduce.py` rebuilds `generated/` and `figures/` from the released JSON. It does not download data and does not refit clusters.
+`reproduce.py` rebuilds `generated/` and `figures/` from `experiments/v2/results/summary.json` and `experiments/v2/results/query_level.json`. It does not download data and does not refit clusters. `query_level.json` holds the Holm decisions and the cross-validated budgets.
 
 A from-scratch rerun of the released MiniLM and BGE-small grid is long:
 
@@ -56,7 +58,7 @@ python experiments/v2/reproduce.py --full
 
 Primary category `cs.IR`, cross-list `cs.LG`. `make arxiv` writes `dist/arxiv-grassmanian.zip` with the TeX source, `paper.bbl`, the class and style files, `generated/`, and `figures/`. The abstract field is plain text, at most 1920 characters, with no TeX macros:
 
-> Partition-based approximate nearest neighbor (ANN) indexes route each query to a few clusters by comparing it with cluster centroids. We ask whether the shape of each cluster, not only its center, is a useful routing signal for retrieval-augmented generation (RAG). We compare three routers over the same k-means partition: cosine-to-centroid (standard IVF), the angle to a through-origin linear subspace (Grassmannian routing), and the residual distance to the cluster's affine k-flat (centroid plus top-k PCA directions), a classical local-PCA construction. On 6 BEIR datasets with 2 sentence embedders, 5 k-means seeds, and paired bootstrap confidence intervals, linear Grassmannian routing is far worse than IVF (-32.2 points of neighbor recall@10 at 32 clusters and 4 probes), because it discards the cluster offset. On average, the k-flat router improves on IVF at equal clusters and probes, and the mean gain grows with k: +0.9, +1.7, and +2.2 recall points and +0.6, +1.3, and +1.9 nDCG@10 points for k = 8, 16, and 32. At k = 16 the recall interval lies above zero in 9 of 12 pairs and the nDCG interval in 6 of 12. Plain Euclidean distance to the centroid (k = 0) is worse than cosine. The improvement therefore comes from the local principal directions. Under an explicit cost model the picture is mixed: when routing cost is counted on these small corpora, finer cosine IVF wins, while at a fixed scan budget k-flat routing gives similar neighbor recall and higher nDCG@10. Bases can be stored in int8 with a mean change of -0.02 recall points, but a single shared basis or per-cluster adaptive k does not help. FAISS HNSW has higher recall@10 than our NumPy k-flat router in 11 of 12 pairs. We release code and aggregated results.
+> Partition-based approximate nearest neighbor indexes route a query by comparing it with cluster centroids. We ask whether local cluster shape is a useful routing signal for dense retrieval. On one shared k-means partition we compare cosine-to-centroid IVF, the angle to a through-origin subspace, and the residual distance to the cluster's affine k-flat, a classical local-PCA score. On 6 BEIR datasets, 2 embedders, and 5 seeds, linear Grassmannian routing is -32.2 points of neighbor recall@10 behind IVF at 32 clusters and 4 probes, because it drops the cluster offset. The k-flat gap grows with k on this slice: +0.9, +1.7, and +2.2 recall points and +0.6, +1.3, and +1.9 nDCG@10 points at k = 8, 16, and 32. Euclidean distance to the centroid (k = 0) is worse than cosine, so the gain is the local directions. Every count of rejections below is the same test: a two-sided percentile bootstrap of the paired per-query difference, with Holm-Bonferroni control across the 12 dataset/embedder pairs at family-wise 5%. At k = 16 that test rejects for recall on 8 of 12 pairs and for nDCG on 6 of 12. Budgeted configurations are chosen by 5-fold cross-validation on the queries and scored on the held-out fold. At 20% of brute-force cost the held-out recall gap is -4.6 points. At a 10% scan budget the held-out nDCG gap is +1.38 points. int8 bases change recall by -0.02 points. Separately, on one k-means seed, FAISS HNSW has higher recall than our NumPy router on 11 of 12 pairs. That comparison is not the bootstrap test. We release code and the query-level aggregates.
 
 ## Not run
 
@@ -64,7 +66,7 @@ Primary category `cs.IR`, cross-list `cs.LG`. `make arxiv` writes `dist/arxiv-gr
 - Seeds beyond 0 through 4 on the released grid.
 - ScaNN on the released grid.
 - A repeat of the synthetic control with more queries or a matched cluster count.
-- Per-query arrays. The repository ships seed-level means and the bootstrap intervals in `experiments/v2/results/summary.json`.
+- The per-query arrays themselves. `run_routing.py` writes them, and `query_level.py` reduces them to `experiments/v2/results/query_level.json`. The arrays are not committed. The seed-averaged means in that file match `summary.json`.
 
 ## Status
 
