@@ -442,7 +442,7 @@ Data & Model & $k{=}0$ & Grass. & $k{=}4$ & $k{=}8$ & $k{=}16$ & $k{=}32$ & PPCA
         )
     table_matched = r"""\begin{table}[t]
 \centering
-\caption{Held-out gap, k-flat minus cosine IVF, inside a FLOP budget. For each of 5 query folds the config is chosen on the other folds and scored on the held-out fold. Recall and nDCG are selected separately. Parentheses are Holm-Bonferroni rejections across the pairs that have a feasible config on every fold (positive, then negative). When fewer than 12 pairs are feasible, that smaller set is the family. A pair whose held-out mean is positive need not reject.}
+\caption{Held-out gap, k-flat minus cosine IVF, inside a multiply-add budget. For each of 5 query folds the config is chosen on the other folds and scored on the held-out fold. Recall and nDCG are selected separately. Parentheses are Holm-Bonferroni rejections across the pairs that have a feasible config on every fold (positive, then negative). When fewer than 12 pairs are feasible, that smaller set is the family. A pair whose held-out mean is positive need not reject.}
 \label{tab:matched}
 \small
 \begin{tabular}{lrlr}
