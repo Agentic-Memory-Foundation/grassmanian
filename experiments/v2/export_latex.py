@@ -500,9 +500,8 @@ Data & Model & R & ms & R & ms & R & ms \\
                 f"{DS_NAME[ds]} & {EMB_NAME[emb]} & {pct(row['explained_frac_k16'])} "
                 f"& {pct(row['gain_recall'], True)} & {pct(row['gain_ndcg'], True)} \\\\"
             )
-    table_an = r"""\begin{table*}[t]
-\centering
-\caption{Size-weighted fraction of within-cluster variance captured by the top 16 principal directions at $C{=}32$ (mean over five seeds), and the $k{=}16$ gap versus cosine at $C{=}32$, $P{=}4$, in points.}
+    table_an = r"""\begin{center}
+\captionof{table}{Size-weighted fraction of within-cluster variance captured by the top 16 principal directions at $C{=}32$ (mean over five seeds), and the $k{=}16$ gap versus cosine at $C{=}32$, $P{=}4$, in points.}
 \label{tab:aniso}
 \small
 \begin{tabular}{llrrr}
@@ -512,7 +511,7 @@ Data & Model & Var.\ @16 (\%) & $\Delta$R@10 & $\Delta$nDCG@10 \\
 """ + "\n".join(irows) + r"""
 \bottomrule
 \end{tabular}
-\end{table*}
+\end{center}
 """
     (GEN / "table_aniso.tex").write_text(table_an)
 
@@ -548,9 +547,8 @@ Data & Model & Var.\ @16 (\%) & $\Delta$R@10 & $\Delta$nDCG@10 \\
         crows.append(
             f"{labels[key]} & {pct(rec)} & {pct(nd)} & {pct(dr, True, 2)} & {pct(dn, True, 2)} & {kavg:.1f} & {mem:.0f} \\\\"
         )
-    table_cheap = r"""\begin{table*}[t]
-\centering
-\caption{Cheaper $k$-flat variants at $C{=}32$, $P{=}4$. Means over 12 pairs and five seeds. Deltas are versus fp32 $k{=}16$, in points. Router memory is the mean of the per-pair byte counts, in KB, and does not include the document vectors.}
+    table_cheap = r"""\begin{center}
+\captionof{table}{Cheaper $k$-flat variants at $C{=}32$, $P{=}4$. Means over 12 pairs and five seeds. Deltas are versus fp32 $k{=}16$, in points. Router memory is the mean of the per-pair byte counts, in KB, and does not include the document vectors.}
 \label{tab:cheap}
 \small
 \setlength{\tabcolsep}{3.5pt}
@@ -561,7 +559,7 @@ Variant & R@10 & nDCG & $\Delta$R & $\Delta$n & Mean $k$ & KB \\
 """ + "\n".join(crows) + r"""
 \bottomrule
 \end{tabular}
-\end{table*}
+\end{center}
 """
     (GEN / "table_cheap.tex").write_text(table_cheap)
 
