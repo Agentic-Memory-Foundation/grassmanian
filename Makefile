@@ -47,7 +47,7 @@ arxiv: paper
 	  'Also included: references.bib, acmart.cls, ACM-Reference-Format.bst,' \
 	  'generated/*.tex, and figures/*.pdf.' \
 	  '' \
-	  'Document class: acmart manuscript, screen, nonacm. This upload is a' \
+	  'Document class: acmart sigconf, nonacm. This upload is a' \
 	  'preprint. It is not a conference submission.' \
 	  'Upload the full zip. Stripping paper.bbl yields undefined citations.' \
 	  > dist/arxiv-src/00README.txt

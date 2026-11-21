@@ -318,9 +318,13 @@ def fig_ann(summary):
     seen = {}
     for h, lab in zip(handles, labels):
         seen.setdefault(lab, h)
-    fig.legend(seen.values(), seen.keys(), loc="upper center", ncol=6, frameon=False, bbox_to_anchor=(0.5, 1.03))
-    fig.tight_layout(rect=(0, 0, 1, 0.96))
-    fig.savefig(FIG / "fig_ann.pdf")
+    fig.tight_layout(rect=(0, 0.06, 1, 1))
+    fig.legend(
+        list(seen.values()), list(seen.keys()),
+        loc="upper center", ncol=6, frameon=False,
+        bbox_to_anchor=(0.5, 0.045),
+    )
+    fig.savefig(FIG / "fig_ann.pdf", bbox_inches="tight", pad_inches=0.06)
     plt.close(fig)
 
 

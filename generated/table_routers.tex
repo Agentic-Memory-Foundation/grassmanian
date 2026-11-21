@@ -2,7 +2,8 @@
 \centering
 \caption{Mean gap versus cosine IVF at $C{=}32$, $P{=}4$, unweighted over 12 dataset/embedder pairs. Counts are Holm-Bonferroni rejections at family-wise 5\% across those 12 pairs (positive, then negative). Recall and nDCG are separate families. The test is a two-sided percentile bootstrap of the seed-averaged per-query difference, 2000 resamples. Gaps are percentage points.}
 \label{tab:routers}
-\small
+\footnotesize
+\setlength{\tabcolsep}{3pt}
 \begin{tabular}{lrrrr}
 \toprule
 Router & $\Delta$R@10 & R up/down & $\Delta$nDCG@10 & n up/down \\
