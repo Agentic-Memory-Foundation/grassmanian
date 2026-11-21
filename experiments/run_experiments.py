@@ -107,7 +107,7 @@ def _eval_config(X, Q, truth, routing, n_clusters, k, n_probe, topk, meta, label
     row = {
         "dataset": tag or routing,
         "routing": routing,
-        "partition": "oracle" if labels is not None else "kmeans",
+        "partition": "oracle" if labels is not None else index.partition_type,
         "n_clusters": stats.n_clusters,
         "subspace_k": k,
         "n_probe": n_probe,
@@ -117,7 +117,7 @@ def _eval_config(X, Q, truth, routing, n_clusters, k, n_probe, topk, meta, label
         "build_s": stats.build_s,
     }
     # Relevance recall only for the paper's primary probe settings (keeps the grid fast).
-    if meta is not None and "qrels" in meta and n_probe in (2, 4) and k in (4, 8):
+    if meta is not None and "qrels" in meta and n_probe in (1, 2, 4, 8) and k in (0, 1, 2, 4, 8):
         preds = []
         for i in range(Q.shape[0]):
             idx, _ = index.search(Q[i], topk=topk, n_probe=n_probe)
@@ -159,29 +159,47 @@ def run_retrieval_suite(
     for n_clusters in cluster_grid:
         if n_clusters * 5 > X.shape[0]:
             continue
-        for routing in ("centroid", "grassmann", "affine_grassmann"):
-            for k in k_grid:
-                if k > X.shape[1]:
+            
+        configs = []
+        # 1. Standard KMeans Partitions
+        configs.append(("centroid", 8, "kmeans"))
+        configs.append(("centroid", 4, "kmeans"))
+        configs.append(("euclidean", 0, "kmeans"))
+        
+        # Grassmann (linear)
+        for k in (4, 8):
+            configs.append(("grassmann", k, "kmeans"))
+            
+        # Affine Grassmannian (k-flat residual routing)
+        for k in (0, 1, 2, 4, 8):
+            configs.append(("affine_grassmann", k, "kmeans"))
+            
+        # 2. Spherical KMeans Partitions with consistent cosine routing
+        configs.append(("centroid", 8, "spherical_kmeans"))
+        configs.append(("centroid", 4, "spherical_kmeans"))
+        
+        for routing, k, p_type in configs:
+            if k > X.shape[1]:
+                continue
+            index = TwoLevelIndex(X, n_clusters=n_clusters, subspace_k=k, routing=routing, partition_type=p_type)
+            for n_probe in probe_grid:
+                if n_probe > index.n_clusters:
                     continue
-                index = TwoLevelIndex(X, n_clusters=n_clusters, subspace_k=k, routing=routing)
-                for n_probe in probe_grid:
-                    if n_probe > index.n_clusters:
-                        continue
-                    rows.append(
-                        _eval_config(
-                            X,
-                            Q,
-                            truth,
-                            routing,
-                            n_clusters,
-                            k,
-                            n_probe,
-                            topk,
-                            meta,
-                            tag=name,
-                            index=index,
-                        )
+                rows.append(
+                    _eval_config(
+                        X,
+                        Q,
+                        truth,
+                        routing,
+                        n_clusters,
+                        k,
+                        n_probe,
+                        topk,
+                        meta,
+                        tag=name,
+                        index=index,
                     )
+                )
 
     # Oracle partition (planted / true labels): upper bound on routing quality
     if oracle_labels is not None:
@@ -310,51 +328,85 @@ def make_figures(results: dict) -> None:
     # Fig 2: recall vs probed fraction for SciFact
     if "scifact" in results:
         rows = results["scifact"]["rows"]
-        fig, ax = plt.subplots(figsize=(5.2, 3.6))
-        for routing, color, marker in (("centroid", "#4a90c8", "o"), ("grassmann", "#c4564e", "s"), ("affine_grassmann", "#70a86e", "^")):
-            pts = [r for r in rows if r["routing"] == routing and r["n_clusters"] == 32 and r["subspace_k"] == 8]
+        fig, ax = plt.subplots(figsize=(6.0, 4.0))
+        
+        plot_configs = [
+            ("centroid", "kmeans", 8, "o", "#4a90c8", "Cosine (K-Means Centroid)"),
+            ("euclidean", "kmeans", 0, "x", "#9b59b6", "Euclidean (K-Means Centroid)"),
+            ("grassmann", "kmeans", 8, "s", "#c4564e", "Linear Grassmannian ($k=8$)"),
+            ("affine_grassmann", "kmeans", 8, "^", "#70a86e", "$k$-Flat Residual ($k=8$)"),
+            ("centroid", "spherical_kmeans", 8, "v", "#e08a3c", "Cosine (Spherical K-Means)")
+        ]
+        
+        for routing, partition, k, marker, color, label in plot_configs:
+            pts = [r for r in rows if r["routing"] == routing and r.get("partition", "kmeans") == partition and r["subspace_k"] == k and r["n_clusters"] == 32]
             if not pts:
-                pts = [r for r in rows if r["routing"] == routing]
+                continue
             pts = sorted(pts, key=lambda r: r["probed_frac"])
             ax.plot(
                 [r["probed_frac"] for r in pts],
                 [r["neighbor_recall@10"] for r in pts],
                 marker=marker,
                 color=color,
-                label=f"{routing}",
+                label=label,
                 linewidth=1.8,
             )
         ax.set_xlabel("Fraction of corpus probed")
         ax.set_ylabel("Neighbor recall@10 (vs exact cosine)")
         ax.set_title("SciFact: routing quality vs scan cost")
         ax.set_ylim(0, 1.05)
-        ax.legend()
+        ax.legend(fontsize=8)
         fig.tight_layout()
         fig.savefig(FIG / "fig_recall_vs_probe.png")
         fig.savefig(FIG / "fig_recall_vs_probe.pdf")
         plt.close(fig)
 
         # Fig 3: ablation over k
-        fig, ax = plt.subplots(figsize=(5.2, 3.6))
-        for routing, color in (("centroid", "#4a90c8"), ("grassmann", "#c4564e"), ("affine_grassmann", "#70a86e")):
-            xs, ys = [], []
-            for k in sorted({r["subspace_k"] for r in rows}):
-                cand = [
-                    r
-                    for r in rows
-                    if r["routing"] == routing and r["subspace_k"] == k and r["n_probe"] == 4 and r["n_clusters"] == 32
-                ]
-                if not cand:
-                    continue
-                xs.append(k)
-                ys.append(cand[0]["neighbor_recall@10"])
-            if xs:
-                ax.plot(xs, ys, marker="o", color=color, label=routing, linewidth=1.8)
+        fig, ax = plt.subplots(figsize=(6.0, 4.0))
+        
+        ks = [0, 1, 2, 4, 8]
+        
+        # 1. affine_grassmann
+        ys_affine = []
+        for k in ks:
+            cand = [r for r in rows if r["routing"] == "affine_grassmann" and r.get("partition", "kmeans") == "kmeans" and r["subspace_k"] == k and r["n_probe"] == 4 and r["n_clusters"] == 32]
+            if cand:
+                ys_affine.append(cand[0]["neighbor_recall@10"])
+            else:
+                ys_affine.append(None)
+        ax.plot([k for k in ks if ys_affine[ks.index(k)] is not None], [y for y in ys_affine if y is not None], marker="^", color="#70a86e", label="$k$-Flat Residual (K-Means)", linewidth=1.8)
+        
+        # 2. grassmann
+        ys_grassmann = []
+        for k in ks:
+            cand = [r for r in rows if r["routing"] == "grassmann" and r.get("partition", "kmeans") == "kmeans" and r["subspace_k"] == k and r["n_probe"] == 4 and r["n_clusters"] == 32]
+            if cand:
+                ys_grassmann.append(cand[0]["neighbor_recall@10"])
+            else:
+                ys_grassmann.append(None)
+        ax.plot([k for k in ks if ys_grassmann[ks.index(k)] is not None], [y for y in ys_grassmann if y is not None], marker="s", color="#c4564e", label="Linear Grassmannian (K-Means)", linewidth=1.8)
+        
+        # 3. reference flat lines
+        # Centroid K-Means
+        c_val = next((r["neighbor_recall@10"] for r in rows if r["routing"] == "centroid" and r.get("partition", "kmeans") == "kmeans" and r["n_probe"] == 4 and r["n_clusters"] == 32), None)
+        if c_val is not None:
+            ax.axhline(c_val, color="#4a90c8", linestyle="--", label="Cosine (K-Means Centroid)")
+            
+        # Euclidean K-Means
+        e_val = next((r["neighbor_recall@10"] for r in rows if r["routing"] == "euclidean" and r.get("partition", "kmeans") == "kmeans" and r["n_probe"] == 4 and r["n_clusters"] == 32), None)
+        if e_val is not None:
+            ax.axhline(e_val, color="#9b59b6", linestyle=":", label="Euclidean (K-Means Centroid)")
+            
+        # Spherical K-Means Centroid
+        s_val = next((r["neighbor_recall@10"] for r in rows if r["routing"] == "centroid" and r.get("partition", "spherical_kmeans") == "spherical_kmeans" and r["n_probe"] == 4 and r["n_clusters"] == 32), None)
+        if s_val is not None:
+            ax.axhline(s_val, color="#e08a3c", linestyle="-.", label="Cosine (Spherical K-Means)")
+            
         ax.set_xlabel("Subspace dimension $k$")
         ax.set_ylabel("Neighbor recall@10")
         ax.set_title("SciFact: effect of subspace dimension (C=32, P=4)")
         ax.set_ylim(0, 1.05)
-        ax.legend()
+        ax.legend(fontsize=8)
         fig.tight_layout()
         fig.savefig(FIG / "fig_k_ablation.png")
         fig.savefig(FIG / "fig_k_ablation.pdf")

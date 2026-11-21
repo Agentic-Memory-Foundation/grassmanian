@@ -29,24 +29,53 @@ def _kmeans_labels(X: np.ndarray, n_clusters: int, seed: int = 0) -> tuple[np.nd
     return labels.astype(np.int32), km.cluster_centers_.astype(np.float32)
 
 
+def _spherical_kmeans(X: np.ndarray, n_clusters: int, max_iter: int = 20, seed: int = 0) -> tuple[np.ndarray, np.ndarray]:
+    n_clusters = max(2, min(n_clusters, X.shape[0] // 5))
+    rng = np.random.default_rng(seed)
+    init_idx = rng.choice(X.shape[0], size=n_clusters, replace=False)
+    centroids = X[init_idx].copy().astype(np.float32)
+    centroids /= np.linalg.norm(centroids, axis=1, keepdims=True) + 1e-12
+    
+    for _ in range(max_iter):
+        scores = X @ centroids.T
+        labels = np.argmax(scores, axis=1).astype(np.int32)
+        for c in range(n_clusters):
+            idx = np.where(labels == c)[0]
+            if len(idx) > 0:
+                mean_vec = X[idx].mean(axis=0)
+                centroids[c] = mean_vec / (np.linalg.norm(mean_vec) + 1e-12)
+            else:
+                centroids[c] = X[rng.choice(X.shape[0])].astype(np.float32)
+                centroids[c] /= np.linalg.norm(centroids[c]) + 1e-12
+                
+    scores = X @ centroids.T
+    labels = np.argmax(scores, axis=1).astype(np.int32)
+    return labels, centroids
+
+
 class TwoLevelIndex:
     def __init__(
         self,
         X: np.ndarray,
         n_clusters: int = 32,
         subspace_k: int = 8,
-        routing: str = "grassmann",  # or "centroid"
+        routing: str = "grassmann",  # or "centroid", "euclidean", "affine_grassmann"
+        partition_type: str = "kmeans",  # or "spherical_kmeans"
         metric: str = "geodesic",
         seed: int = 0,
         labels: np.ndarray | None = None,
     ):
         self.X = X
         self.routing = routing
+        self.partition_type = partition_type
         self.metric = metric
         self.subspace_k = subspace_k
         t0 = time.perf_counter()
         if labels is None:
-            self.labels, self.centroids = _kmeans_labels(X, n_clusters, seed=seed)
+            if partition_type == "spherical_kmeans":
+                self.labels, self.centroids = _spherical_kmeans(X, n_clusters, seed=seed)
+            else:
+                self.labels, self.centroids = _kmeans_labels(X, n_clusters, seed=seed)
         else:
             self.labels = np.asarray(labels, dtype=np.int32)
             self.n_clusters = int(self.labels.max()) + 1
@@ -63,7 +92,9 @@ class TwoLevelIndex:
         self.bases = []
         for c in range(self.n_clusters):
             idx = self.members[c]
-            if len(idx) == 0:
+            if subspace_k == 0:
+                self.bases.append(np.zeros((X.shape[1], 0), dtype=np.float64))
+            elif len(idx) == 0:
                 # degenerate: use random orthonormal
                 rng = np.random.default_rng(c)
                 U = rng.normal(size=(X.shape[1], subspace_k))
@@ -76,7 +107,7 @@ class TwoLevelIndex:
         cn = np.linalg.norm(self.centroids, axis=1, keepdims=True) + 1e-12
         self.centroids_n = self.centroids / cn
         # Stack subspace bases as (C, m, k_max) with zero-pad for unequal k
-        k_max = max((b.shape[1] for b in self.bases), default=1)
+        k_max = max((b.shape[1] for b in self.bases), default=0)
         stacked = np.zeros((self.n_clusters, X.shape[1], k_max), dtype=np.float64)
         for c, U in enumerate(self.bases):
             stacked[c, :, : U.shape[1]] = U
@@ -90,10 +121,16 @@ class TwoLevelIndex:
             # higher cosine = better → convert to distance-like score (lower better)
             sims = self.centroids_n @ qn
             return -sims
+        elif self.routing == "euclidean":
+            # Euclidean distance to unnormalized centroids (no PCA)
+            Q_c = qn - self.centroids
+            return np.sqrt(np.sum(Q_c**2, axis=1))
         elif self.routing == "affine_grassmann":
             # Affine Grassmannian: project centered query (qn - centroid) onto centered subspace U
             Q_c = qn - self.centroids
             q_c_norm2 = np.sum(Q_c**2, axis=1)
+            if self._basis_stack.shape[2] == 0:
+                return np.sqrt(np.clip(q_c_norm2, 0.0, None))
             proj = np.einsum("cmk,cm->ck", self._basis_stack, Q_c)
             proj_norm2 = np.sum(proj**2, axis=1)
             return np.sqrt(np.clip(q_c_norm2 - proj_norm2, 0.0, None))

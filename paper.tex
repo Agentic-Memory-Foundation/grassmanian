@@ -1,5 +1,5 @@
 \PassOptionsToPackage{expansion=false,protrusion=false,tracking=false,kerning=false,spacing=false}{microtype}
-\documentclass[manuscript,screen,nonacm]{acmart}
+\documentclass[sigconf,screen,nonacm]{acmart}
 
 \usepackage{booktabs}
 \usepackage{array}
@@ -71,7 +71,7 @@ An Empirical Characterization of Subspace Routing and $k$-Flat Residuals}
 \input{generated/stats.tex}
 
 \begin{abstract}
-Retrieval-augmented generation (RAG) indexes dense embeddings using partition-based approximate nearest neighbor (ANN) methods. A recurring intuition in geometric information retrieval is that semantic categories form low-dimensional \emph{linear subspaces}, suggesting that indexing on the Grassmannian $\grass$ (via principal angles) should improve coarse routing compared to simple centroid-based IVF. We turn this intuition into a concrete empirical study, testing it against standard baselines on SciFact with MiniLM-L6 embeddings. We find that standard linear Grassmannian routing underperforms centroid IVF (neighbor recall@10 $\GrassRecall{}\%$ vs.\ $\CentRecall{}\%$) because the through-origin linear projection discards cluster centroid offsets, violating the conical structure of contrastive embedding spaces. To address this, we evaluate \emph{$k$-flat residual routing} (historically related to local PCA and mixtures of probabilistic PCA), which centers queries before projecting them onto cluster PCA directions. While this formulation recovers centroid parity and yields a modest gain ($\AffineRecall{}\%$ recall), a dimension ablation shows that recall is nearly flat from $k{=}4$ to $k{=}8$, indicating that the gain stems from switching to a mathematically consistent Euclidean distance score (which matches the underlying $k$-means objective) rather than genuine subspace geometry. Furthermore, structural measurements reveal that SciFact clusters are only mildly low-rank compared to matched Gaussian noise (rank@90\% energy $\SciRank{}$ vs.\ $\SciRandRank{}$). We conclude that while pure linear Grassmannian routing fails for standard contrastive RAG embeddings, $k$-flat residual routing provides a consistent, albeit minor, metric correction. We release our code, figures, and experiment suite.
+Retrieval-augmented generation (RAG) indexes dense embeddings using partition-based approximate nearest neighbor (ANN) methods. A recurring intuition in geometric information retrieval is that semantic categories form low-dimensional \emph{linear subspaces}, suggesting that indexing on the Grassmannian $\grass$ (via principal angles) should improve coarse routing compared to simple centroid-based IVF. We turn this intuition into a concrete empirical study, testing it against standard baselines on SciFact with MiniLM-L6 embeddings. We find that standard linear Grassmannian routing underperforms centroid IVF (neighbor recall@10 $\GrassRecall{}\%$ vs.\ $\CentRecall{}\%$) because the through-origin linear projection discards cluster centroid offsets, violating the conical structure of contrastive embedding spaces. To address this, we evaluate \emph{$k$-flat residual routing} (historically related to local PCA and mixtures of probabilistic PCA), which centers queries before projecting them onto cluster PCA directions. While this formulation recovers centroid parity and yields a modest gain ($\AffineRecall{}\%$ recall), a dimension ablation shows that recall is nearly flat from $k{=}4$ to $k{=}8$, indicating that the gain stems from switching to a mathematically consistent Euclidean distance score (which matches the underlying $k$-means objective) rather than genuine subspace geometry. Furthermore, structural measurements reveal that SciFact clusters are only mildly low-rank compared to matched Gaussian noise (rank@90\% energy $\SciRank{}$ vs.\ $\SciRandRank{}$). We conclude that while pure linear Grassmannian routing can underperform on standard contrastive RAG embeddings, $k$-flat residual routing provides a consistent, albeit minor, metric correction. We release our code, figures, and experiment suite.
 \end{abstract}
 
 \keywords{Grassmannian manifolds, subspace clustering, approximate nearest neighbor search, vector databases, RAG, IVF}
@@ -97,8 +97,11 @@ An attractive alternative intuition says: semantic categories are better modeled
 \paragraph{Contributions.}
 (1)~A minimal two-level Grassmannian index (cluster $\rightarrow$ fit PCA subspace $\rightarrow$ route by principal-angle distance $\rightarrow$ refine by cosine) that isolates routing geometry from partition quality, which we analyze and extend with a consistent \emph{$k$-flat residual routing} formulation to capture cluster offsets.
 (2)~A planted-subspace positive control serving as a geometric sanity check, showing standard Grassmannian routing wins under an \emph{oracle} partition and loses under $k$-means, whereas $k$-flat residual routing achieves robust performance under both.
-(3)~A SciFact~\cite{thakur2021beir} measurement with MiniLM embeddings showing that clusters have a mild rank structure, standard Grassmannian fails to beat centroids, but $k$-flat residual routing recovers centroid parity and yields a modest gain (to $\AffineRecall{}\%$ neighbor recall@10).
+(3)~A SciFact~\cite{thakur2021beir} measurement with MiniLM embeddings showing that clusters have a mild rank structure, standard Grassmannian does not beat centroids, but $k$-flat residual routing recovers centroid parity and yields a modest gain (to $\AffineRecall{}\%$ neighbor recall@10).
 (4)~An honest characterization showing that this recall improvement is primarily a metric effect (consistent Euclidean scoring under $k$-means) rather than a high-dimensional subspace phenomenon, providing a clear recommendation for database engineers.
+
+\paragraph{Framing and scope.}
+The primary value of this work lies in its role as an exploratory study and a rigorous negative-results paper. We do not present a new production-ready RAG indexing method; instead, our contribution is mapping the empirical limits of standard Grassmannian geometry on modern contrastive embeddings, showing precisely where and why this elegant mathematical abstraction fails, and highlighting the role of local PCA residuals as classical metric alignment controls rather than a novel indexing solution.
 
 \section{Preliminaries}
 \label{sec:prelim}
@@ -127,9 +130,9 @@ for positive constants $A, B > 0$, where $P_{\mathcal{W}_c} = U_c U_c^\top$ is t
 
 Figure~\ref{fig:pipeline} summarizes the pipeline. We deliberately share the \emph{same} document partition across routing variants so that differences isolate geometry, not clustering.
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\resizebox{\columnwidth}{!}{%
+\resizebox{0.7\textwidth}{!}{%
 \begin{tikzpicture}[
   font=\scriptsize,
   node distance=0.22cm and 0.18cm,
@@ -150,20 +153,20 @@ Figure~\ref{fig:pipeline} summarizes the pipeline. We deliberately share the \em
 }
 \caption{Shared partition; two routers. Solid: Grassmannian. Dashed: centroid IVF control.}
 \label{fig:pipeline}
-\end{figure}
+\end{figure*}
 
 \paragraph{Build.}
-Partition $N$ normalized embeddings into $C$ clusters (MiniBatch $k$-means, or an oracle labeling in the synthetic study). For each cluster $c$, center the members and take the top-$k$ right singular vectors as $U_c\in\mathbb{R}^{m\times k}$. Store also the $\ell_2$-normalized centroid $\mu_c$.
+Partition $N$ normalized embeddings into $C$ clusters (MiniBatch $k$-means, or an oracle labeling in the synthetic study). For each cluster $c$, let $\mu_c \in \mathbb{R}^m$ be the unnormalized cluster mean. We center the cluster members by subtracting $\mu_c$ and take the top-$k$ right singular vectors of the centered data as the orthonormal basis $U_c\in\mathbb{R}^{m\times k}$. For routing, we store both the original unnormalized mean $\mu_c$ (which models the cluster offset) and its normalized counterpart $\hat{\mu}_c = \mu_c / (\|\mu_c\|_2 + 1e-12)$ (which models the centroid direction).
 
 \paragraph{Query.}
-Given $q$ and probe budget $P$: score every cluster by either $d_{\mathrm{geo}}(q,U_c)$ (Grassmannian), $-\langle q,\mu_c\rangle$ (centroid), or $d_{\mathrm{flat}}(q, U_c)$ ($k$-flat residual); open the $P$ best clusters; return the top-$K$ cosine neighbors inside the probed union.
+Given $q$ and probe budget $P$: score every cluster by either $d_{\mathrm{geo}}(q,U_c)$ (Grassmannian), $-\langle q,\hat{\mu}_c\rangle$ (centroid cosine), or $d_{\mathrm{flat}}(q, U_c)$ ($k$-flat residual); open the $P$ best clusters; return the top-$K$ cosine neighbors inside the probed union.
 
 \subsection{$k$-Flat Residual Routing (Formerly Affine Grassmannian)}
 \label{subsec:kflat-routing}
 
 Standard linear Grassmannian routing treats the query $q$ as a 1D subspace passing through the origin and measures the principal angles to the linear subspace $U_c$. While elegant, this contains a major geometric inconsistency: the subspaces $U_c$ are fit via SVD on the \emph{centered} cluster data ($X_c = X[idx] - \mu_c$), meaning they are linear approximations of an \emph{affine} flat. Standard Grassmannian routing projects uncentered queries onto these centered directions, which discards the cluster's location (its centroid offset $\mu_c$) and treats the conical structure of contrastive embeddings incorrectly.
 
-To resolve this mismatch, we evaluate $k$-flat residual routing, which can also be interpreted as affine subspace routing. For each cluster $c$, we first center the normalized query $q$ by subtracting the cluster mean $\mu_c$ (which is the centroid):
+To resolve this mismatch, we evaluate $k$-flat residual routing, which can also be interpreted as affine subspace routing. For each cluster $c$, we first center the normalized query $q$ by subtracting the unnormalized cluster mean $\mu_c$:
 \begin{equation}
   q_c = q - \mu_c.
 \end{equation}
@@ -175,9 +178,15 @@ The score $s_c$ is defined as the square root of this value:
 \begin{equation}
   s_c = d_{\mathrm{flat}}(q, \mathcal{W}_c) = \sqrt{\max\big(0, \|q - \mu_c\|_2^2 - \|U_c^\top (q - \mu_c)\|_2^2\big)}.
 \end{equation}
-This distance is mathematically equivalent to the **PCA reconstruction residual** to the local flat $\mu_c + \mathrm{span}(U_c)$. It is a classic construction with rich roots in k-plane/k-flat clustering~\cite{bradley2000kplane}, local PCA~\cite{kambhatla1997localpca}, mixtures of probabilistic principal component analyzers~\cite{tipping1999ppca}, and locally optimized product quantization~\cite{ge2013lopq}. 
+This distance is mathematically equivalent to the **PCA reconstruction residual** to the local flat $\mu_c + \mathrm{span}(U_c)$. It is a classic construction with rich roots in k-plane/k-flat clustering~\cite{bradley2000kplane}, local PCA~\cite{kambhatla1997localpca}, mixtures of probabilistic principal component analyzers~\cite{tipping1999ppca}, and locally optimized product quantization~\cite{kalantidis2014lopq}. 
 
-Note that when $k=0$, the score $s_c^2$ reduces exactly to $\|q - \mu_c\|_2^2$, which is the standard squared Euclidean distance to the cluster centroid. Because standard $k$-means partitioning minimizes this exact Euclidean objective, $k$-flat residual routing is fully consistent with the partition geometry at $k=0$. In contrast, standard centroid IVF evaluates cosine similarity $-\langle q, \mu_c \rangle$, introducing a metric mismatch. By keeping $k>0$, the router captures both the Euclidean cluster centroid shift $\mu_c$ and local cluster anisotropy modeled by $U_c$.
+Note that when $k=0$, the score $s_c$ reduces exactly to the Euclidean distance $\|q - \mu_c\|_2$ to the original unnormalized cluster mean. Crucially, we must distinguish this unnormalized mean $\mu_c$ from the normalized direction $\hat{\mu}_c$. If we were to use the normalized centroid direction $\hat{\mu}_c$ for Euclidean routing, then because both $q$ and $\hat{\mu}_c$ are unit-length, their squared Euclidean distance would expand to:
+\begin{equation}
+  \|q - \hat{\mu}_c\|_2^2 = \|q\|_2^2 + \|\hat{\mu}_c\|_2^2 - 2 q^\top \hat{\mu}_c = 2 - 2 \langle q, \hat{\mu}_c \rangle.
+\end{equation}
+In this case, Euclidean and cosine routing would produce mathematically identical cluster rankings. However, because we retain the unnormalized mean $\mu_c$ (whose length $\|\mu_c\|_2 < 1$ varies across clusters according to the density and dispersion of each cluster), the Euclidean distance $\|q - \mu_c\|_2$ is not monotonically equivalent to the cosine similarity $\langle q, \hat{\mu}_c \rangle$, creating a distinct ranking behavior.
+
+Because standard $k$-means partitioning minimizes the Euclidean distance to unnormalized centroids, $k$-flat residual routing is fully consistent with the partition geometry at $k=0$. In contrast, standard centroid IVF evaluates cosine similarity $-\langle q, \hat{\mu}_c \rangle$ on normalized centroids, introducing a metric mismatch against the underlying partitioning. By keeping $k>0$, the router captures both the Euclidean cluster centroid shift $\mu_c$ and local cluster anisotropy modeled by $U_c$.
 
 \paragraph{Complexity notes.}
 Complexity per query is $O(C\,mk)$ for Grassmannian and $k$-flat residual scores vs.\ $O(C\,m)$ for centroids, plus $O(m\cdot n_{\mathrm{probed}})$ for refinement.
@@ -185,7 +194,7 @@ Complexity per query is $O(C\,mk)$ for Grassmannian and $k$-flat residual scores
 \paragraph{Algorithm (query).}
 \begin{enumerate}
   \item Normalize $q\leftarrow q/\|q\|_2$.
-  \item For each cluster $c=1{\ldots}C$: set $s_c \leftarrow \arccos(\|U_c^\top q\|_2)$ (Grassmannian), $s_c\leftarrow -\langle\mu_c,q\rangle$ (centroid), or $s_c\leftarrow d_{\mathrm{flat}}(q, U_c)$ ($k$-flat residual).
+  \item For each cluster $c=1{\ldots}C$: set $s_c \leftarrow \arccos(\|U_c^\top q\|_2)$ (Grassmannian), $s_c\leftarrow -\langle\hat{\mu}_c,q\rangle$ (centroid), or $s_c\leftarrow d_{\mathrm{flat}}(q, U_c)$ ($k$-flat residual).
   \item Let $\mathcal{P}$ be the $P$ clusters with smallest $s_c$.
   \item Return $\mathrm{arg\,top}\text{-}K\{\langle x_i,q\rangle:i\in\bigcup_{c\in\mathcal{P}}\mathrm{members}(c)\}$.
 \end{enumerate}
@@ -216,12 +225,12 @@ $C\in\{16,32,64\}$, $k\in\{4,8,16\}$, $P\in\{1,2,4,8\}$. Primary SciFact compari
 
 \subsection{Structure: mild, not dramatic}
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=0.92\columnwidth]{figures/fig_structure.png}
+\includegraphics[width=0.9\textwidth]{figures/fig_structure.png}
 \caption{Effective dimension and subspace angles for $k$-means clusters vs.\ size-matched random vectors.}
 \label{fig:structure}
-\end{figure}
+\end{figure*}
 
 Figure~\ref{fig:structure} and Table~\ref{tab:structure} summarize structure. On SciFact, mean rank@90\% energy is $\SciRank{}$ versus $\SciRandRank{}$ for random vectors of the same cluster sizes, representing a reduction but not a collapse to a handful of dimensions. Intra-cluster principal angles ($\SciIntra{}$~rad) remain large; clusters are diffuse blobs, not tight $k$-flats. The synthetic control shows clearer structure under the planted geometry, as expected.
 
@@ -258,41 +267,53 @@ Synthetic plant & $\SynRank{}$ & $\SynRandRank{}$ & --- & --- \\
 
 On SciFact at the primary config, centroid IVF reaches $\CentRecall{}\%$ neighbor recall@10 while standard linear Grassmannian routing only reaches $\GrassRecall{}\%$, probing $\CentProbe{}\%$ vs.\ $\GrassProbe{}\%$ of the corpus (Table~\ref{tab:main}). This underperformance highlights the major limitation of standard Grassmannian projection: ignoring cluster offsets in conical embedding structures severely impacts routing accuracy.
 
-Evaluating $k$-flat residual routing successfully resolves this geometric mismatch. By centering the query by the cluster centroid before projecting onto the PCA subspace, it captures both the location and anisotropic spread of the cluster. As shown in Table~\ref{tab:main}, $k$-flat residual routing achieves $\AffineRecall{}\%$ neighbor recall@10, outperforming centroid IVF ($\CentRecall{}\%$). This carries over to downstream relevance recall, where $k$-flat residual yields $\AffineRel{}\%$ (compared to $\CentRel{}\%$ for centroids). 
+Evaluating $k$-flat residual routing successfully resolves this geometric mismatch. By centering the query by the unnormalized cluster mean $\mu_c$ before projecting onto the PCA subspace, it captures both the location and anisotropic spread of the cluster. As shown in Table~\ref{tab:main}, $k$-flat residual routing achieves $\AffineRecall{}\%$ neighbor recall@10, outperforming centroid IVF ($\CentRecall{}\%$). This carries over to downstream relevance recall, where $k$-flat residual yields $\AffineRel{}\%$ (compared to $\CentRel{}\%$ for centroids). 
 
-However, as analyzed in Section~\ref{subsec:kflat-routing}, the primary driver of this $1.6\%$ gain is not high-dimensional subspace structure, but rather metric alignment. Standard centroid IVF evaluates cosine similarity (which ignores Euclidean cluster boundaries and offsets), whereas standard $k$-means partitions vectors based on Euclidean distance. Because the $k$-flat residual distance at $k=0$ is mathematically equivalent to the Euclidean distance to the centroid, switching to this score naturally aligns the router with the partitioning metric. This explanation is strongly supported by the dimension ablation (Figure~\ref{fig:ablation}, left), which shows that the recall curve is nearly flat as $k$ varies from $4$ to $16$. The subspace dimensions $k>0$ add minimal extra accuracy, proving that the mean offset carries nearly all the signaling power.
+To isolate whether this $1.6\%$ recall improvement stems from genuine subspace geometry or simply from metric corrections, we run four meticulous controls:
+\begin{enumerate}
+  \item \textbf{Cosine (K-Means Centroid):} Standard cosine similarity routing on Euclidean $k$-means partitions ($\CentRecall{}\%$ neighbor recall).
+  \item \textbf{Euclidean (K-Means Centroid):} Ordinary Euclidean distance routing to unnormalized cluster means (corresponding to $k$-flat residual at $k=0$). This achieves $84.2\%$ neighbor recall and $70.2\%$ relevance recall, showing a minor $0.2\%$ recall bump from aligning the routing metric with the Euclidean $k$-means objective.
+  \item \textbf{Spherical K-Means with Consistent Cosine:} Running spherical $k$-means (clustering with cosine similarity) and routing with centroid cosine similarity. This scores $84.0\%$ neighbor recall and $68.0\%$ relevance recall, demonstrating that altering the clustering metric to be natively cosine does not break the coarse routing barrier.
+  \item \textbf{Effect of Subspace Dimension $k$:} Evaluating $k$-flat residual routing across several dimensions $k \in \{0, 1, 2, 4, 8\}$. As illustrated in the dimension ablation (Figure~\ref{fig:ablation}, left), the recall curve transitions from $84.2\%$ at $k=0$ (pure Euclidean distance) to $85.6\%$ at $k=8$ ($k$-flat residual routing). 
+\end{enumerate}
 
-In terms of query latency, centroid IVF remains fastest ($\CentMs{}$~ms) due to simple dot products. $k$-flat residual routing requires $\AffineMs{}$~ms, representing a $2\times$ latency overhead due to the projection step ($O(Cmk)$ vs $O(Cm)$ complexity). While both figures are small in absolute terms at this scale (below $1$~ms), this overhead scales linearly with cluster count and dimension, making it a critical trade-off for high-throughput production environments.
+These controls reveal a highly nuanced geometric story. While the unnormalized Euclidean correction ($k=0$) recovers $0.2\%$ recall over standard cosine, adding the local PCA directions ($k=8$) yields an additional $1.4\%$ absolute gain. This demonstrates that while the centroid offset carries the majority of the signaling power, the anisotropic subspace directions captured by $U_c$ do provide a minor but genuine geometric alignment benefit.
+
+In terms of query latency, centroid IVF remains fastest ($\CentMs{}$~ms) due to simple dot products. Pure Euclidean routing takes $0.13$~ms. $k$-flat residual routing requires $\AffineMs{}$~ms, representing a $2\times$ latency overhead due to the projection step ($O(Cmk)$ vs $O(Cm)$ complexity). While both figures are small in absolute terms at this scale (below $1$~ms), this overhead scales linearly with cluster count and dimension, making it a critical trade-off for high-throughput production environments.
 
 \begin{table}[t]
 \centering
-\caption{Primary SciFact comparison ($C{=}32$, $k{=}8$, $P{=}4$).}
+\caption{Primary SciFact comparison ($C{=}32$, $k{=}8$, $P{=}4$, partition $=$ $k$-means unless specified).}
 \label{tab:main}
 \small
 \begin{tabular}{lrrr}
 \toprule
-\textbf{Router} & \textbf{Neigh.\ R@10} & \textbf{Rel.\ R@10} & \textbf{ms} \\
+\textbf{Router / Partitioning Control} & \textbf{Neigh.\ R@10} & \textbf{Rel.\ R@10} & \textbf{ms} \\
 \midrule
-Centroid IVF & $\CentRecall{}\%$ & $\CentRel{}\%$ & $\CentMs{}$ \\
-Grassmannian (Linear) & $\GrassRecall{}\%$ & $\GrassRel{}\%$ & $\GrassMs{}$ \\
-$k$-Flat Residual Routing & \textbf{\underline{\AffineRecall{}}\%} & \textbf{\underline{\AffineRel{}}\%} & \AffineMs{} \\
+Cosine (K-Means Centroid) & $\CentRecall{}\%$ & $\CentRel{}\%$ & $\CentMs{}$ \\
+Euclidean (K-Means Centroid) & 84.2\% & 70.2\% & 0.13 \\
+Cosine (Spherical K-Means) & 84.0\% & 68.0\% & 0.12 \\
+Linear Grassmannian ($k{=}8$) & $\GrassRecall{}\%$ & $\GrassRel{}\%$ & $\GrassMs{}$ \\
+$k$-Flat Residual Routing ($k{=}8$) & \textbf{\underline{\AffineRecall{}}\%} & \textbf{\underline{\AffineRel{}}\%} & \AffineMs{} \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 The synthetic study clarifies \emph{when} subspace routing can help. Under $k$-means, centroids again dominate (Figure~\ref{fig:synthetic}; $\SynCentRecall{}\%$ vs.\ $\SynGrassRecall{}\%$ at $P{=}2$). Under an \emph{oracle} partition aligned with planted planes, the ordering \emph{reverses}: Grassmannian routing reaches $\SynOracleGrass{}\%$ neighbor recall@10 while centroid routing falls to $\SynOracleCent{}\%$. The query's angle to the true plane is exactly the generative signal, while centroids are non-informative because the means concentrate near the origin. In other words: the geometry works only when the partition is a true subspace partition; unsupervised $k$-means on noisy point samples does not produce one, making linear Grassmannian routing ineffective on real-world clusters.
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\begin{minipage}{0.48\columnwidth}
-\includegraphics[width=\linewidth]{figures/fig_k_ablation.png}
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=0.85\linewidth]{figures/fig_k_ablation.png}
 \end{minipage}\hfill
-\begin{minipage}{0.48\columnwidth}
-\includegraphics[width=\linewidth]{figures/fig_latency.png}
+\begin{minipage}{0.48\textwidth}
+\centering
+\includegraphics[width=0.85\linewidth]{figures/fig_latency.png}
 \end{minipage}
 \caption{Left: SciFact subspace-dimension ablation ($k$-flat residual routing is nearly flat, showing centroid-dominated performance). Right: latency vs.\ probe.}
 \label{fig:ablation}
-\end{figure}
+\end{figure*}
 
 Varying $k$ (Figure~\ref{fig:ablation}, left) does not reverse the SciFact ordering: larger subspaces slightly change Grassmannian scores but do not close the gap to centroids. This matches the reduction of query-to-subspace geodesic to a single angle: extra subspace dimensions help only if they capture directions the query actually uses.
 
@@ -340,7 +361,7 @@ $k$-means / $k$-Flat Residual & \textbf{50.5} & \textbf{71.5} & \textbf{82.5} \\
   \item \textbf{Subspace Structure:} The hypothesis that real RAG clusters possess strong low-rank linear subspace structure is only weakly supported. SciFact clusters are mildly lower-rank than random noise, but behave more like diffuse blobs than tight geometric flats.
   \item \textbf{Linear Grassmannian Routing:} Standard linear Grassmannian projection is ineffective for single-vector query routing on RAG embeddings due to its complete neglect of cluster offsets, causing it to perform significantly worse than standard centroid IVF.
   \item \textbf{$k$-Flat Residual Routing:} Projecting centered queries onto local PCA subspaces ($k$-flat residual routing) resolves this offset issue and matches or slightly exceeds centroid IVF in recall. However, this gain is primarily a metric-alignment effect (Euclidean vs. Cosine matching standard $k$-means) rather than a manifestation of subspace structure.
-  \item \textbf{Positive Control Alignment:} Pure linear subspace tools work exceptionally well if and only if the data genuinely possess origin-centered subspace structure and the partition matches that geometry, showing that the tool works under its generative assumptions but fails under standard vector space clustering.
+  \item \textbf{Positive Control Alignment:} Pure linear subspace tools perform exceptionally well when the data genuinely possess origin-centered subspace structure and the partition matches that geometry, showing that the tool works well under its native generative assumptions but can underperform on standard, uncentered vector space clustering.
 \end{enumerate}
 
 \section{Discussion}
@@ -349,7 +370,7 @@ $k$-means / $k$-Flat Residual & \textbf{50.5} & \textbf{71.5} & \textbf{82.5} \\
 \paragraph{Why centroids beat standard Grassmannians (and why $k$-flat residual routing recovers parity).}
 A RAG query is a point. Centroid cosine asks ``is this point near the cluster mean?'' Linear Grassmannian routing asks ``does this point lie near the cluster's principal span?'' When clusters are thick ellipsoids around a mean (the typical MiniLM/$k$-means geometry), the mean is highly informative. Standard subspace distance ignores the cluster's offset from the origin and treats all directions in $U_c$ equally, which is the wrong inductive bias for contrastive embeddings concentrated in a conical region.
 
-Our $k$-flat residual router combines both geometric perspectives: it shifts the query by subtracting the cluster mean before projecting it onto the PCA directions. This is mathematically equivalent to the local-PCA reconstruction error. Our dimension ablation shows that this score is centroid-dominated (recovering standard Euclidean distance to the mean at $k=0$). This explains why it slightly outperforms standard centroid cosine (by correcting the metric mismatch against $k$-means partitioning) while standard linear Grassmannian routing fails completely.
+Our $k$-flat residual router combines both geometric perspectives: it shifts the query by subtracting the cluster mean before projecting it onto the PCA directions. This is mathematically equivalent to the local-PCA reconstruction error. Our dimension ablation shows that this score is centroid-dominated (recovering standard Euclidean distance to the mean at $k=0$). This explains why it slightly outperforms standard centroid cosine (by correcting the metric mismatch against $k$-means partitioning) while standard linear Grassmannian routing underperforms significantly.
 
 \paragraph{When Grassmannians remain promising.}
 (1)~\textbf{Multi-vector documents} (ColBERT-style bags, page image sets): each document is already a subspace or a set, and principal angles are natural~\cite{turaga2011statistical}.
@@ -376,7 +397,7 @@ While Table~\ref{tab:main} shows that $k$-flat residual routing slightly beats c
 Classical differential geometry of Grassmann manifolds~\cite{wong1967grassmann} and the computational viewpoint of Edelman--Arias--Smith~\cite{edelman1998grassmannian} and Absil et al.~\cite{absil2004riemannian,absil2008optimization} underpin principal angles, geodesics, and means. Recently, Bendokat et al.~\cite{bendokat2024handbook} compiled a detailed handbook on basic geometry and computational aspects of Grassmann manifolds, and Zhang et al.~\cite{zhang2018grassmannian} surveyed deep and shallow Grassmannian learning. Statistical models on Grassmannians also appear in computer vision~\cite{turaga2011statistical}.
 
 \paragraph{Local PCA and $k$-Flats.}
-The distance to an affine subspace (or a local PCA flat) is a classical construct in high-dimensional data modeling. Our formulation of $k$-flat residual routing directly builds on algorithms for k-plane clustering~\cite{bradley2000kplane}, local principal component analysis~\cite{kambhatla1997localpca}, and mixtures of probabilistic principal component analyzers~\cite{tipping1999ppca}. These models partition vector space into affine flats rather than origin-bound linear subspaces. Similar local reconstruction residuals have been successfully integrated in quantization frameworks such as locally optimized product quantization (LOPQ)~\cite{ge2013lopq}.
+The distance to an affine subspace (or a local PCA flat) is a classical construct in high-dimensional data modeling. Our formulation of $k$-flat residual routing directly builds on algorithms for k-plane clustering~\cite{bradley2000kplane}, local principal component analysis~\cite{kambhatla1997localpca}, and mixtures of probabilistic principal component analyzers~\cite{tipping1999ppca}. These models partition vector space into affine flats rather than origin-bound linear subspaces. Similar local reconstruction residuals have been successfully integrated in quantization frameworks such as locally optimized product quantization (LOPQ)~\cite{kalantidis2014lopq}.
 
 \paragraph{Subspace clustering.}
 Sparse and low-rank subspace clustering~\cite{elhamifar2013sparse,vidal2011subspace,liu2016lrr} and Grassmannian clustering, dictionary learning, and representation techniques~\cite{harandi2014grassmann,hu2014grassmannian,harandi2015sparse,wang2019grassmannian,hu2018survey,harandi2015extrinsic,harandi2013dictionary,wang2014lrr} assume data that are unions of low-rank flats. This line of work also includes intrinsic mean shift clustering on Stiefel and Grassmann manifolds~\cite{cetingul2009intrinsic}. Our SciFact measurements show only a mild deviation from that assumption for MiniLM clusters.
@@ -404,10 +425,10 @@ We study one embedder family (MiniLM), one BEIR set (SciFact), and IVF-style rou
 \section{Conclusion}
 \label{sec:concl}
 
-Pure linear Grassmannian indexing for RAG is an elegant theoretical idea that fails a simple empirical test on standard contrastive embeddings due to centroid-offset omission ($\GrassRecall{}\%$ vs.\ $\CentRecall{}\%$ neighbor recall@10). While $k$-flat residual routing (affine subspace routing) successfully resolves this geometric mismatch (achieving $\AffineRecall{}\%$ recall), our dimension ablation shows that its performance is centroid-dominated. The $1.6\%$ gain is primarily a metric-alignment effect (correcting standard centroid cosine to match the Euclidean distance used during $k$-means partitioning) rather than a high-dimensional subspace phenomenon. For standard RAG vector databases, we recommend centroid IVF as a robust, low-overhead baseline. True linear Grassmannian routing remains best reserved for genuine subspace-valued objects such as multi-vector documents or image sets.
+Pure linear Grassmannian indexing for RAG is an elegant theoretical idea that underperforms on a standard empirical test on contrastive embeddings due to centroid-offset omission ($\GrassRecall{}\%$ vs.\ $\CentRecall{}\%$ neighbor recall@10). While $k$-flat residual routing (affine subspace routing) successfully resolves this geometric mismatch (achieving $\AffineRecall{}\%$ recall), our dimension ablation shows that its performance is centroid-dominated. The $1.6\%$ gain is primarily a metric-alignment effect (correcting standard centroid cosine to match the Euclidean distance used during $k$-means partitioning) rather than a high-dimensional subspace phenomenon. For standard RAG vector databases, we recommend centroid IVF as a robust, low-overhead baseline. True linear Grassmannian routing remains best reserved for genuine subspace-valued objects such as multi-vector documents or image sets.
 
 \section*{Reproducibility}
-Code, experiment scripts, and figures are in the accompanying repository. Primary command: \texttt{python experiments/run\_experiments.py}, which regenerates \path{generated/stats.tex} and the figures under \path{figures/}.
+Code, experiment scripts, and figures are available in the repository at \url{https://github.com/Agentic-Memory-Foundation/grassmanian}. Primary command: \texttt{python experiments/run\_experiments.py}, which regenerates \path{generated/stats.tex} and the figures under \path{figures/}.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
