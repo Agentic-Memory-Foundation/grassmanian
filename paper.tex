@@ -6,6 +6,7 @@
 \usepackage{graphicx}
 \usepackage{placeins}
 \usepackage{dblfloatfix}
+\usepackage{float}
 \let\Bbbk\relax
 \usepackage{amssymb}
 \usepackage{amsmath}
@@ -157,9 +158,9 @@ With scan cost only, the ordering changes. At 10\% of brute force the held-out r
 
 On the seed-0 partition, FAISS HNSW ($M = 32$, $\mathrm{efSearch} = 16$) has higher recall@10 than the NumPy $k = 16$ router ($C = 32$, $P = 4$) on \HnswRecallWins{} of 12 pairs, and lower measured latency on \HnswLatWins{} of 12 (Table~\ref{tab:ann}).
 
-The one exception on recall is FiQA with BGE: the NumPy router has 89.8\% and HNSW has 88.7\% (Table~\ref{tab:ann}). That count is a comparison of point estimates on one seed, not the bootstrap test above, and the $k$-flat column is not the five-seed mean in Table~\ref{tab:perpair}. The latency comparison is not implementation-matched: FAISS is C++, and our second stage walks cluster slices in Python. The route-only portion of the $k = 16$ score is \RouteUsLo{} to \RouteUsHi{} microseconds, against end-to-end NumPy times of 0.059 to 0.313 ms in that table. Under the FLOP model, the flat is a better coarse score than cosine at fixed scan cost and a worse use of arithmetic than a finer cosine partition when routing is charged. It is not a better index than HNSW at these scales. ScaNN was not run~\cite{guo2020scann}.
-
 \input{generated/table_ann.tex}
+
+The one exception on recall is FiQA with BGE: the NumPy router has 89.8\% and HNSW has 88.7\% (Table~\ref{tab:ann}). That count is a comparison of point estimates on one seed, not the bootstrap test above, and the $k$-flat column is not the five-seed mean in Table~\ref{tab:perpair}. The latency comparison is not implementation-matched: FAISS is C++, and our second stage walks cluster slices in Python. The route-only portion of the $k = 16$ score is \RouteUsLo{} to \RouteUsHi{} microseconds, against end-to-end NumPy times of 0.059 to 0.313 ms in that table. Under the FLOP model, the flat is a better coarse score than cosine at fixed scan cost and a worse use of arithmetic than a finer cosine partition when routing is charged. It is not a better index than HNSW at these scales. ScaNN was not run~\cite{guo2020scann}.
 
 \begin{figure*}[t]
 \centering
