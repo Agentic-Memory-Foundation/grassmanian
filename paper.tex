@@ -338,16 +338,19 @@ Table~\ref{tab:deltas} gives the pair-level recall gap for every router at $C = 
 
 \begin{figure*}[!t]
 \centering
-\includegraphics[width=\textwidth,height=0.43\textheight,keepaspectratio]{figures/fig_scan_recall.pdf}
-\caption{Neighbor recall@10 against the fraction of the corpus scanned. On this scale cosine and the $k$-flat nearly overlap. Linear Grassmannian routing stays far below. It was not run at $C \in \{128, 256\}$.}
-\label{fig:scan}
-\end{figure*}
-
-\begin{figure*}[!t]
-\centering
-\includegraphics[width=\textwidth,height=0.50\textheight,keepaspectratio]{figures/fig_scan_ndcg.pdf}
-\caption{nDCG@10 against the fraction scanned, same routers as Figure~\ref{fig:scan}.}
-\label{fig:scanndcg}
+\begin{minipage}{0.49\textwidth}
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{figures/fig_scan_recall.pdf}
+  \caption{Neighbor recall@10 against the fraction of the corpus scanned. On this scale cosine and the $k$-flat nearly overlap. Linear Grassmannian routing stays far below. It was not run at $C \in \{128, 256\}$.}
+  \label{fig:scan}
+\end{minipage}
+\hfill
+\begin{minipage}{0.49\textwidth}
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{figures/fig_scan_ndcg.pdf}
+  \caption{nDCG@10 against the fraction scanned, same routers as Figure~\ref{fig:scan}.}
+  \label{fig:scanndcg}
+\end{minipage}
 \end{figure*}
 
 \section{Synthetic positive control}
