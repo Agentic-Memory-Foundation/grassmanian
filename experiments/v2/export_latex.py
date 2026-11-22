@@ -307,7 +307,7 @@ def write_numbers(summary):
     lines.append(macro("CheapKSixteenR", pct(ch["kflat16_fp32"]["recall"])))
     lines.append(macro("CheapIntDR", pct(ch["kflat16_int8"]["d_recall_vs_fp32"], True, 2)))
     lines.append(macro("CheapIntDN", pct(ch["kflat16_int8"]["d_ndcg_vs_fp32"], True, 2)))
-    lines.append(macro("CheapFp16DR", pct(ch["kflat16_fp16"]["d_recall_vs_fp32"], True, 2)))
+    lines.append(macro("CheapFpSixteenDR", pct(ch["kflat16_fp16"]["d_recall_vs_fp32"], True, 2)))
     lines.append(macro("CheapSharedDR", pct(ch["shared_k16"]["d_recall_vs_fp32"], True, 2)))
     lines.append(macro("CheapSharedDN", pct(ch["shared_k16"]["d_ndcg_vs_fp32"], True, 2)))
     lines.append(macro("CheapAdDR", pct(ch["adaptive_tau0.35"]["d_recall_vs_fp32"], True, 2)))

@@ -74,4 +74,4 @@ Primary category `cs.IR`, cross-list `cs.LG`. `make arxiv` writes `dist/arxiv-gr
 
 Revision of the single-seed SciFact draft. The metric-alignment explanation in that draft is wrong: k = 0 is worse than cosine, so the gain is the local principal directions. k-flat routing is a reasonable coarse score when the scan dominates and the metric is nDCG@10. It is not a replacement for HNSW, and on these corpora a finer cosine IVF wins once routing FLOPs are counted.
 
-Questions: [parag@rigai.co](mailto:parag@rigai.co), [sarkar@chicory.ai](mailto:sarkar@chicory.ai), [avinash@rigai.co](mailto:avinash@rigai.co), [ashutosh@zeru.finance](mailto:ashutosh@zeru.finance), and [gurukiran@zeru.finance](mailto:gurukiran@zeru.finance). Soumick Chakraborty's email is TODO: not confirmed on SSRN, arXiv, or Google Scholar.
+Questions: [parag@rigai.co](mailto:parag@rigai.co), [sarkar@chicory.ai](mailto:sarkar@chicory.ai), [avinash@rigai.co](mailto:avinash@rigai.co), [ashutosh@zeru.finance](mailto:ashutosh@zeru.finance), and [gurukiran@zeru.finance](mailto:gurukiran@zeru.finance).
