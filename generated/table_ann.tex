@@ -2,7 +2,7 @@
 \centering
 \setlength{\abovecaptionskip}{4pt}%
 \setlength{\belowcaptionskip}{2pt}%
-\caption{Seed 0, one thread, batch size 1. Latency is the median of three passes over the queries. HNSW uses $M{=}32$, $\mathrm{efSearch}{=}16$. IVF-Flat uses 32 lists and 4 probes. k-flat is the NumPy router at $k{=}16$, $C{=}32$, $P{=}4$. FAISS is C++ and the k-flat column is Python, so the milliseconds are not an implementation-matched comparison. Recall is.}
+\caption{Single-thread retrieval latency and recall comparisons at seed 0 (batch size 1). Latency is the median of three runs over the queries. HNSW uses $M{=}32, \mathrm{efSearch}{=}16$; IVF-Flat uses 32 lists and 4 probes; $k$-flat uses our Python prototype ($k{=}16, C{=}32, P{=}4$). Latency values are not implementation-matched, but serve as a baseline comparison.}
 \label{tab:ann}
 \scriptsize
 \renewcommand{\arraystretch}{0.84}%

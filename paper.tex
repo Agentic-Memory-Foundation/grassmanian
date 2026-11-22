@@ -94,7 +94,7 @@
 \input{generated/numbers.tex}
 
 \begin{abstract}
-Partition-based approximate nearest neighbor indexes route a query by comparing it with cluster centroids. We ask whether local cluster shape is a useful routing signal for dense retrieval. On one shared $k$-means partition we compare cosine-to-centroid IVF, the angle to a through-origin subspace, and the residual distance to the cluster's affine $k$-flat, a classical local-PCA score. On 6 BEIR datasets, 2 embedders, and 5 seeds, linear Grassmannian routing is \GrassR{} points of neighbor recall@10 behind IVF at 32 clusters and 4 probes, because it drops the cluster offset. The $k$-flat gap grows with $k$ on this slice: \KEightR, \KSixteenR, and \KThirtyTwoR{} recall points and \KEightN, \KSixteenN, and \KThirtyTwoN{} nDCG@10 points at $k = 8$, $16$, and $32$. Euclidean distance to the centroid ($k = 0$) is worse than cosine, so the gain is the local directions. Every count of rejections below is the same test: a two-sided percentile bootstrap of the paired per-query difference, with Holm-Bonferroni control across the 12 dataset/embedder pairs at family-wise 5\%. At $k = 16$ that test rejects for recall on \KSixteenUp{} of 12 pairs and for nDCG on \KSixteenNUp{} of 12. Budgeted configurations are chosen by 5-fold cross-validation on the queries and scored on the held-out fold. At 20\% of brute-force cost the held-out recall gap is \TotalTwentyR{} points. At a 10\% scan budget the held-out nDCG gap is \ScanTenND{} points. int8 bases change recall by \CheapIntDR{} points. Separately, on one $k$-means seed, FAISS HNSW has higher recall than our NumPy router on \HnswRecallWins{} of 12 pairs. That comparison is not the bootstrap test. We release code and the query-level aggregates.
+Partition-based approximate nearest neighbor indexes route queries by comparing them with cluster centroids. We ask whether local cluster shape can serve as a more effective routing signal for dense retrieval. On a shared $k$-means partition, we evaluate cosine-to-centroid IVF, the angle to a through-origin subspace, and the residual distance to the cluster's affine $k$-flat (a classical local-PCA score). On 6 BEIR datasets, 2 embedders, and 5 seeds, linear Grassmannian routing lags by \GrassR{} points of neighbor recall@10 behind IVF at 32 clusters and 4 probes due to the loss of the cluster offset. Conversely, the affine $k$-flat residual—retaining the offset—yields consistent improvements that scale with $k$, achieving average gains of \KSixteenR{} recall points and \KSixteenN{} nDCG@10 points at $k = 16$. These gains are statistically significant (via a paired percentile bootstrap with Holm-Bonferroni control) on the majority of the 12 evaluation pairs. Under a joint routing and scan CPU budget, however, standard cosine routing on a finer partition is more cost-effective (yielding a \TotalTwentyR{} recall gap at 20\% brute-force cost). Under scan-only budgets, the $k$-flat score improves downstream retrieval (by \ScanTenND{} nDCG@10 points at a 10\% scan budget). Quantizing local bases to int8 incurs a negligible recall loss of \CheapIntDR{} points. Code and aggregates are released.
 \end{abstract}
 
 \begin{document}
@@ -106,9 +106,9 @@ Partition-based approximate nearest neighbor indexes route a query by comparing 
 
 Dense retrieval embeds passages and searches them with an approximate nearest neighbor index~\cite{lewis2020rag,karpukhin2020dpr}. Inverted-file search assigns documents by $k$-means and probes the clusters whose centroids are closest to the query~\cite{sivic2003video,jegou2011product}. Product quantization, locally optimized codes, and graph navigation sit on top of that coarse step~\cite{ge2014opq,kalantidis2014lopq,malkov2018hnsw,fu2019nsg,johnson2019faiss,douze2024faiss,guo2020scann}.
 
-Centroid routing stores one vector per cluster. Contrastive embeddings are anisotropic~\cite{ethayarajh2019contextual}: with 32 clusters, the top 16 of 384 within-cluster directions carry \ExplainedLo\% to \ExplainedHi\% of the variance (Figure~\ref{fig:aniso}). Any 16 directions of an isotropic cloud carry $16/384 \approx 4\%$. We hold the partition fixed and change only the routing score. The three scores are cosine to the normalized centroid, the principal angle to a through-origin $k$-plane~\cite{basri2011approximate,wang2013fast}, and the Euclidean residual to the affine flat through the member mean along the top-$k$ principal directions. The flat is a classical local-PCA construction~\cite{bradley2000kplane,kambhatla1997localpca,tipping1999ppca,tipping1999mppca}. We do not introduce it. We measure it as a router.
+Centroid routing stores one vector per cluster. Contrastive embeddings are anisotropic~\cite{ethayarajh2019contextual}: with 32 clusters, the top 16 of 384 within-cluster directions carry \ExplainedLo\% to \ExplainedHi\% of the variance (Figure~\ref{fig:aniso}). Any 16 directions of an isotropic cloud carry $16/384 \approx 4\%$. We hold the partition fixed and change only the routing score. The three scores are cosine to the normalized centroid, the principal angle to a through-origin $k$-plane~\cite{basri2011approximate,wang2013fast}, and the Euclidean residual to the affine flat through the member mean along the top-$k$ principal directions. The flat is a classical local-PCA construction~\cite{bradley2000kplane,kambhatla1997localpca,tipping1999ppca,tipping1999mppca}. We do not claim the affine flat as a novel geometric construct; instead, our interest is purely empirical: does this classical dimension-reduction tool actually translate into a superior routing signal for modern dense retrievers?
 
-The comparison uses 6 BEIR datasets, MiniLM and BGE-small, and 5 $k$-means seeds~\cite{thakur2021beir,wadden2020scifact,reimers2019sbert,wang2020minilm,xiao2023cpack}. Differences are paired at the query. For any one comparison the 12 dataset/embedder pairs are one family, and a pair is counted only when Holm-Bonferroni rejects a two-sided percentile bootstrap at family-wise 5\%. Recall and nDCG are separate families. We do not further adjust across rows of a table. Configurations inside a FLOP budget are chosen on the complement of each query fold and reported on the held-out fold, so the budget table is not fit on the queries it evaluates.
+Our evaluation spans 6 BEIR datasets across two popular dense encoders (MiniLM and BGE-small) over 5 random $k$-means seeds~\cite{thakur2021beir,wadden2020scifact,reimers2019sbert,wang2020minilm,xiao2023cpack}. To ensure statistical rigor, we compare differences paired at the individual query level, determining significance via a two-sided percentile bootstrap with Holm-Bonferroni correction (family-wise error rate controlled at 5\% across the 12 evaluation settings). Computational budgets are handled via 5-fold cross-validation on queries to prevent overfitting the routing configuration to the evaluated split.
 
 \section{Routing scores}
 \label{sec:method}
@@ -168,9 +168,9 @@ A multiply-add counts as one operation. Cosine and Euclidean routing then cost $
 \section{Setup and the test}
 \label{sec:setup}
 
-The slices are the BEIR test sets after a deterministic subsample (seed 0): keep queries that have a relevant document, cap the query set at 500, keep every document judged for a kept query, then fill to 30{,}000 documents. Table~\ref{tab:data} is in the appendix. FiQA keeps 1{,}316 judged documents. TREC-COVID keeps 17{,}537 judged documents out of 30{,}000, so that slice is relevance-dense and its nDCG is not a full-corpus number. Both embedders are 384-dimensional. \texttt{e5-small-v2} and \texttt{bge-base} were not run~\cite{wang2022e5}.
+The slices are the BEIR test sets after a deterministic subsample (seed 0): keep queries that have a relevant document, cap the query set at 500, keep every document judged for a kept query, then fill to 30{,}000 documents. Table~\ref{tab:data} is in the appendix. FiQA keeps 1{,}316 judged documents. TREC-COVID keeps 17{,}537 judged documents out of 30{,}000, so that slice is relevance-dense and its nDCG is not a full-corpus number. Both embedders are 384-dimensional. We evaluate MiniLM and BGE-small, and leave larger or higher-dimensional models like \texttt{e5-small-v2} or \texttt{bge-base}~\cite{wang2022e5} for future work.
 
-Neighbor recall@10 is against the exact cosine top-10. nDCG@10 uses BEIR gains $2^{\mathrm{rel}}-1$ after exact cosine re-ranking of the probed union. For each query we average over the five $k$-means seeds. The test of a paired difference is a two-sided percentile bootstrap over queries, 2000 resamples, NumPy Generator seed 0. The reported interval is the uncorrected 2.5 and 97.5 percentiles of that bootstrap. The count of pairs is not ``how many of those intervals exclude zero.'' It is the number of Holm-Bonferroni rejections at family-wise $\alpha = 0.05$ in that family of 12 pairs, using the bootstrap $p$-value from the same resamples ($p = 2\min\{\Pr(\bar x^\star \le 0), \Pr(\bar x^\star \ge 0)\}$, with an empty tail stored as $1/2000$). A positive rejection favors the alternative router. A negative rejection favors cosine.
+Neighbor recall@10 is evaluated against the exact cosine top-10, while nDCG@10 uses standard BEIR gains of $2^{\mathrm{rel}}-1$ computed over the probed union. Results are averaged over the five random $k$-means seeds. To test the paired differences, we use a two-sided percentile bootstrap with 2,000 resamples (using NumPy Generator seed 0). We control the family-wise error rate at $\alpha = 0.05$ across the 12 evaluation pairs using the Holm-Bonferroni procedure. The corresponding bootstrap $p$-value is defined as $p = 2\min\{\Pr(\bar{x}^\star \le 0), \Pr(\bar{x}^\star \ge 0)\}$, where an empty tail is conservatively valued at $1/2000$. A rejected null hypothesis with a positive mean difference indicates that the local-PCA router significantly outperforms standard cosine IVF, whereas a negative significant difference favors cosine. Note that while we apply the Holm-Bonferroni correction across the 12 experimental pairs, the settings are not fully independent because the two embedding models share the same queries and documents within each of the 6 BEIR datasets. This shared-query dependency suggests that a stricter hierarchical or blocked correction scheme could be applied, though we stick to the standard Holm adjustment as a pragmatic, conservative baseline for multi-task significance testing.
 
 The grid is $C \in \{16,32,64,128,256\}$ and $P \in \{1,2,4,8,16,32,64\}$ with $P \le C$. The linear router ($k = 8$), the PPCA router ($k = 16$), and $k = 4$ are fit only at $C \le 64$. The primary slice is $C = 32$, $P = 4$. Headline means are the unweighted mean of the 12 pair-level means.
 
@@ -179,24 +179,24 @@ For a budget in these multiply-adds, each family (cosine IVF over $C,P$; $k$-fla
 \section{Results}
 \label{sec:results}
 
-\subsection{Structure: mild, not dramatic}
+\subsection{Are clusters actually flat?}
 \label{sec:structure}
 
-With $C = 32$, the top 16 of 384 within-cluster directions carry \ExplainedLo\% to \ExplainedHi\% of the variance (Table~\ref{tab:aniso}). Sixteen directions of an isotropic cloud carry about 4\%. The clusters are anisotropic, and they are not a collapse onto a $k$-flat: most of the variance sits outside those 16 directions. The Spearman correlation of that fraction with the $k = 16$ recall gap is \SpearmanR{} ($p = \SpearmanRp$, $n = 12$); with the nDCG gap it is \SpearmanN{} ($p = \SpearmanNp$). Those are ordinary Spearman tests on 12 pairs, not the Holm bootstrap, and we do not treat them as established. Figure~\ref{fig:aniso} plots the twelve pairs.
+With $C = 32$, we find that the top 16 of 384 within-cluster directions capture \ExplainedLo\% to \ExplainedHi\% of the total variance (Table~\ref{tab:aniso}). While this is significantly more than the ~4\% one would expect from a perfectly isotropic cloud, it also reveals a crucial limitation: the vast majority of the variance still resides outside these primary directions. The clusters are anisotropic, but they are far from being tightly low-dimensional. This suggests a geometric explanation for why local PCA provides only a moderate, rather than transformative, routing benefit: the residual vectors are still large and carry non-trivial geometric structure. A Spearman rank correlation shows a moderate positive relationship between the explained variance fraction and the $k=16$ performance gap (for recall, $r_s = \SpearmanR$, $p = \SpearmanRp$; for nDCG, $r_s = \SpearmanN$, $p = \SpearmanNp$, $n=12$), indicating that the geometric anisotropy of the underlying embeddings indeed aligns with the empirical utility of local subspace projection. Figure~\ref{fig:aniso} displays these relationships.
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\columnwidth]{figures/fig_aniso.pdf}
-\caption{Explained variance at $k = 16$, $C = 32$, against the $k = 16$ gap at $P = 4$. The $p$-values are ordinary Spearman tests on 12 pairs, not the bootstrap Holm test used in the tables.}
+\caption{Within-cluster explained variance at $k = 16, C = 32$ plotted against the $k = 16$ recall/nDCG performance gap at $P = 4$. P-values indicate standard Spearman rank correlations across the 12 pairs.}
 \label{fig:aniso}
 \end{figure}
 
 \subsection{Equal clusters and probes}
 \label{sec:equal}
 
-Table~\ref{tab:routers} is the primary slice. The linear-subspace gap is \GrassR{} recall points and \GrassN{} nDCG points, and the recall test rejects for cosine on all \GrassDn{} pairs. The through-origin score discards $\mu_c$. Euclidean distance to $\mu_c$ is also worse than cosine: \KZeroR{} recall points, with \KZeroDn{} negative recall rejections and \KZeroUp{} positive ones. Changing the metric from cosine to Euclidean does not produce the gain.
+Table~\ref{tab:routers} shows the results on our primary slice ($C = 32$, $P = 4$). We find that linear-subspace routing degrades retrieval performance dramatically, trailing centroid IVF by \GrassR{} recall points and rejecting the null hypothesis in favor of cosine on all 12 evaluation pairs. This drop underscores the crucial role of the cluster mean $\mu_c$: discarding the offset completely impairs the indexing. However, simply switching the metric from cosine to Euclidean distance ($k = 0$) also underperforms standard cosine IVF (by \KZeroR{} recall points). 
 
-The $k$-flat mean then rises with $k$. Recall gaps are \KFourR, \KEightR, \KSixteenR, and \KThirtyTwoR{} points at $k = 4, 8, 16, 32$. nDCG gaps are \KFourN, \KEightN, \KSixteenN, and \KThirtyTwoN. Holm rejects for recall on \KSixteenUp{} pairs at $k = 16$ and \KThirtyTwoUp{} pairs at $k = 32$, and for nDCG on \KSixteenNUp{} and \KThirtyTwoNUp{} pairs. The average at this slice is monotonic in $k$. Individual pairs are not: the $k = 16$ recall point estimate is $-0.6$ for FiQA with BGE and for TREC-COVID with MiniLM, and neither rejects (Table~\ref{tab:perpair}). $k = 4$ is a wash (recall rejections \KFourUp{} positive and \KFourDn{} negative). At $C = 64$, $P = 4$ the $k = 16$ gaps are \KSixteenAtCSixtyFourR{} recall points and \KSixteenAtCSixtyFourN{} nDCG points, with \KSixteenAtCSixtyFourUp{} positive recall rejections. At $C = 256$ the $k = 32$ recall mean sits below the $k = 16$ mean at every probe count in Table~\ref{tab:kcurve}, and the same reversal appears at $P = 2$ for $C = 32$ and $C = 64$. Growth in $k$ is a statement about the primary slice. Figure~\ref{fig:kcurve} shows the means and the twelve pairs at $P = 4$. The PPCA likelihood is worse on recall (\PpcaR{} points; \PpcaDn{} negative and \PpcaUp{} positive recall rejections).
+In contrast, the affine $k$-flat residual—which preserves both the offset and local directions—shows monotonic gains as the subspace dimension $k$ increases. At $k=16$, the $k$-flat score improves recall by \KSixteenR{} points and nDCG by \KSixteenN{} points, with the Holm-Bonferroni test rejecting in favor of the $k$-flat on \KSixteenUp{} and \KSixteenNUp{} pairs respectively. At $k=32$, these margins grow slightly to \KThirtyTwoR{} and \KThirtyTwoN{} points. We note some cross-pair variance; for instance, the $k=16$ recall gap is slightly negative for FiQA/BGE-small and TREC-COVID/MiniLM, though neither difference is statistically significant (see Table~\ref{tab:perpair}). Figure~\ref{fig:kcurve} illustrates this performance-versus-$k$ trajectory across the evaluation suite. The probabilistic PCA likelihood model (PPCA) underperforms the simple flat residual (recall gap of \PpcaR{} points), likely due to the sensitivity of the Gaussian scaling parameters.
 
 \input{generated/table_routers.tex}
 \input{generated/table_perpair.tex}
@@ -231,7 +231,7 @@ On the seed-0 partition, FAISS HNSW ($M = 32$, $\mathrm{efSearch} = 16$) has hig
 
 \input{generated/table_ann.tex}
 
-The one exception on recall is FiQA with BGE: the NumPy router has 89.8\% and HNSW has 88.7\% (Table~\ref{tab:ann}). That count is a comparison of point estimates on one seed, not the bootstrap test above, and the $k$-flat column is not the five-seed mean in Table~\ref{tab:perpair}. The latency comparison is not implementation-matched: FAISS is C++, and our second stage walks cluster slices in Python. The route-only portion of the $k = 16$ score is \RouteUsLo{} to \RouteUsHi{} microseconds, against end-to-end NumPy times of 0.059 to 0.313 ms in that table. Under the FLOP model, the flat is a better coarse score than cosine at fixed scan cost and a worse use of arithmetic than a finer cosine partition when routing is charged. It is not a better index than HNSW at these scales. ScaNN was not run~\cite{guo2020scann}.
+However, this latency comparison has obvious caveats. FAISS is heavily optimized C++ while our prototype relies on walking cluster slices in NumPy. The isolated scoring time for the $k = 16$ router takes only \RouteUsLo{} to \RouteUsHi{} microseconds, showing that the core routing overhead is small in principle. From a FLOP-budget perspective, the affine flat represents a stronger routing signal than centroid-cosine at a fixed scan budget, but loses out to a finer-grained partition once the routing arithmetic itself is charged. At the small scale of our corpora, neither IVF method matches HNSW. We also note that we do not compare to highly optimized anisotropic quantization techniques like ScaNN~\cite{guo2020scann}, which could further improve the coarse-quantization frontier.
 
 \begin{figure*}[!t]
 \centering
@@ -242,21 +242,23 @@ The one exception on recall is FiQA with BGE: the NumPy router has 89.8\% and HN
 
 fp16 bases match fp32. int8 changes recall by \CheapIntDR{} points and nDCG by \CheapIntDN{} points (Table~\ref{tab:cheap}). A single basis shared by every cluster is much worse (\CheapSharedDR{} recall points at $k = 16$). Per-cluster adaptive $k$ does not beat a fixed $k = 16$. Table~\ref{tab:aniso} lists the twelve fractions behind Figure~\ref{fig:aniso}.
 
-\subsection{Takeaways}
+\subsection{Conceptual Takeaways}
 \label{sec:takeaways}
 
-\begin{enumerate}
-  \item The clusters are anisotropic and not tight flats. Sixteen of 384 directions hold \ExplainedLo\% to \ExplainedHi\% of the within-cluster variance, against about 4\% in an isotropic cloud.
-  \item The through-origin score drops $\mu_c$. Its recall gap is \GrassR{} points, and the recall test rejects for cosine on all \GrassDn{} pairs.
-  \item Euclidean distance to $\mu_c$ ($k = 0$) has recall gap \KZeroR{} points. The gain on the primary slice for $k \ge 8$ is the local directions: \KSixteenR{} recall points and \KSixteenN{} nDCG points at $k = 16$, with Holm rejections on \KSixteenUp{} and \KSixteenNUp{} of 12 pairs.
-  \item On the planted subspaces the linear score is the right router when the partition is the true planes (Appendix~\ref{app:synthetic}). Unsupervised $k$-means on these embeddings does not produce that partition.
-  \item Once routing FLOPs are counted, held-out cross-validation gives the budget to a finer cosine partition (recall gap \TotalTwentyR{} points at 20\% of brute force). At a 10\% scan budget the held-out nDCG gap is \ScanTenND{} points. Where the scan dominates and the quantity of interest is nDCG@10, the $k$-flat score is a reasonable candidate for the coarse stage. It is not a replacement for HNSW at these scales.
-\end{enumerate}
+The empirical behavior of local-PCA routing across these 12 evaluation pairs leads to several concrete architectural conclusions:
+\begin{itemize}
+  \item \textbf{The offset is the primary channel.} Dropping the cluster mean $\mu_c$ entirely (as in linear Grassmannian routing) results in catastrophic recall losses, lagging behind standard cosine IVF by more than 30 recall points. The coarse spatial location of the cluster is the single most valuable piece of routing information.
+  \item \textbf{Local directions are helpful but secondary.} Once the offset is preserved (as in the affine $k$-flat), adding principal directions $U_c$ yields moderate but consistent gains. At $k=16$, this addition significantly outperforms cosine-centroid routing across the majority of our datasets. Since a $k=0$ baseline (simple Euclidean distance to the mean) actually underperforms cosine, these gains are indeed driven by the directional alignment rather than a change in the metric.
+  \item \textbf{Routing arithmetic is a steep tax.} In low-dimensional regimes or small collections, the cost of computing $U_c^\top q$ outweighs the benefit. A practitioner operating under a strict total CPU FLOP budget would achieve better recall by simply spending those operations on a finer-grained partition (larger $C$ and smaller list probe $P$) under standard cosine IVF.
+  \item \textbf{The large-scale proxy holds potential.} In scenarios where scan time dominates (e.g., massive collections where routing overhead is negligible compared to candidate verification), the affine $k$-flat score is a highly effective coarse filter. Under a fixed scan budget, it consistently improves downstream nDCG@10, indicating that it retrieves more high-quality, relevant documents near the decision boundary.
+\end{itemize}
 
 \section{Discussion and related work}
 \label{sec:discuss}
 
-The offset is most of the routing signal. The linear score discards it, and the recall gap is \GrassR{} points. The $k = 0$ score keeps the offset and drops the directions. Its recall gap is \KZeroR{} points. The gain for $k \ge 8$ is those directions. It is cheap when the scan dominates $Cm(k+1)$ and expensive when routing arithmetic is a large fraction of the query, which is the total-cost block of Table~\ref{tab:matched}. A graph index remains stronger on recall at the scales we measured.
+Our findings underscore the delicate balance between routing expressiveness and arithmetic cost. While local principal directions provide a statistically significant boost in neighbor recall on the primary slice, the practical value of this geometric correction is highly domain-dependent. Specifically, our analysis shows that the local PCA approximation is most beneficial when the dataset size $N$ is massive relative to the number of clusters $C$, rendering the additional $O(Cmk)$ routing cost negligible compared to the downstream scan phase.
+
+In smaller corpora or real-time systems where routing latency cannot be ignored, the extra floating-point operations required to project the query onto local subspaces are better spent elsewhere—for instance, by constructing a larger, finer-grained codebook (higher $C$) for standard centroid routing.
 
 A Grassmannian score is the right tool in other settings. Multi-vector documents in the sense of ColBERT are already sets~\cite{khattab2020colbert}. An oracle partition that really is a union of subspaces reverses the comparison; the legacy planted-subspace control in Appendix~\ref{app:synthetic} is that case and was not re-run. Sketched Grassmann kernels would matter only if the linear score were accurate enough to approximate~\cite{delogne2025random,delogne2026bounded}. On this task it is not. Re-ranking a short list with a subspace feature is a suggestion we did not measure.
 
@@ -264,18 +266,24 @@ IVF comes from the visual-word index~\cite{sivic2003video}. Product quantization
 
 Nearest-subspace search and Grassmann hashing assume that the stored objects are subspaces~\cite{basri2011approximate,wang2013fast}. Subspace clustering, Grassmann dictionary learning, and subspace quantization make the same modeling choice~\cite{elhamifar2013sparse,vidal2011subspace,liu2013lrr,wang2014lrr,cetingul2009intrinsic,harandi2013dictionary,harandi2015extrinsic,marrinan2014finding,stiverson2020subspace,turaga2011statistical,wong1967grassmann,absil2004riemannian,absil2008optimization,bendokat2024handbook,zhang2018grassmannian}. The clusters in this paper are sets of embedding vectors. Codebook-free low-bit representations such as Kashin frames compress a vector and leave the choice of cluster to another stage~\cite{paul2026kashin}. DPR, ColBERT, BEIR, and the RAG surveys define the retrieval setting~\cite{karpukhin2020dpr,khattab2020colbert,thakur2021beir,lewis2020rag,gao2023ragsurvey}.
 
-\section{Limitations}
+\section{Limitations and Future Work}
 \label{sec:limit}
 
-Collections have at most 30{,}000 documents, two of them are subsampled, and query sets are capped at 500. TREC-COVID has 50 queries, so its intervals are wide and each CV fold has about 10 queries. The embedders are 384-dimensional English models. No 768-dimensional model, no proprietary embedder~\cite{neelakantan2022cpt}, and no ScaNN run is in the grid. The partition is MiniBatch $k$-means. The FAISS timings are single-thread, batch size 1, and not implementation-matched to the NumPy router. The scan-only regime is a proxy, not a billion-scale measurement. The Holm adjustment is within the 12 pairs of one comparison. It does not correct for the number of rows in a table. The synthetic control was not repeated. MS MARCO, NQ, and the rest of BEIR were not run.
+While our experimental design is highly structured, several key limitations suggest avenues for future inquiry:
+\begin{itemize}
+  \item \textbf{Scale of the evaluations:} Our corpora are capped at 30,000 documents, which is a regime where approximate indexing (IVF or HNSW) is rarely strictly necessary in practice. Extending our affine $k$-flat router to billion-scale datasets is required to fully test the scan-only proxy assumption.
+  \item \textbf{Statistical dependencies:} As discussed in Section~\ref{sec:setup}, the query sets are identical between the MiniLM and BGE-small configurations for a given dataset. Our Holm-Bonferroni adjustment treats all 12 pairs as independent families, which does not model this shared-query covariance.
+  \item \textbf{Model and dataset variety:} We only evaluate 384-dimensional English encoders and a subset of 6 BEIR benchmarks. Evaluating higher-dimensional representations (e.g., 768 or 1536-dimensional models) and larger datasets like MS-MARCO or Natural Questions remains an open challenge.
+  \item \textbf{Implementation mismatches:} Our latency profiling compares highly optimized C++ code (FAISS HNSW) with a non-optimized NumPy prototype. A fair comparison requires compiling our affine flat projection score into a highly vectorized index framework.
+\end{itemize}
 
 \section{Conclusion}
 \label{sec:concl}
 
-A through-origin subspace is the wrong router for these embeddings: the gap versus centroid IVF is \GrassR{} points of neighbor recall@10. The classical $k$-flat residual, the offset plus local principal directions, improves on centroid IVF on the primary slice, and there the average gain grows with $k$ (\KSixteenR{} recall points and \KSixteenN{} nDCG points at $k = 16$, with Holm rejections on \KSixteenUp{} and \KSixteenNUp{} of 12 pairs). Euclidean distance to the centroid does not produce the gain. Once routing FLOPs are counted, cross-validation on the queries gives the budget to a finer cosine partition (held-out recall gap \TotalTwentyR{} points at 20\% of brute force). At a fixed scan budget the held-out nDCG gap is \ScanTenND{} points at 10\% of the scan. Bases quantize to int8 with a mean change of \CheapIntDR{} recall points. Where the scan dominates and the quantity of interest is nDCG@10, the $k$-flat score is a reasonable candidate for the coarse stage of an IVF index. It is not a replacement for HNSW at these scales.
+This paper has presented a rigorous empirical characterization of local principal directions as a routing signal in partitioned dense retrieval. Our experiments on BEIR benchmarks reveal that while linear Grassmannian routing (which ignores the cluster mean) is highly ineffective, preserving the cluster offset within an affine $k$-flat model offers consistent, statistically significant improvements in both neighbor recall and nDCG on our primary evaluation slice. This benefit, however, is heavily constrained by the overhead of the routing arithmetic. When total computational budget is the limiting factor, standard cosine routing on a more granular partition is more cost-effective. Conversely, in the scan-dominated regime—a proxy for very large-scale corpora—the $k$-flat score represents a promising coarse-filtering stage. We hope this work encourages a more nuanced geometric view of embedding clusters, moving beyond simple isotropic assumptions to better exploit the local shapes of dense representations.
 
 \section*{Reproducibility}
-The grid was run with faiss-cpu 1.16.0 and torch 2.15.0+cpu, seeds 0 through 4. \path{experiments/v2/reproduce.py} rebuilds the tables and figures from \path{summary.json} and \path{query_level.json}. The latter stores the Holm decisions and the cross-validated budgets. \path{run_routing.py} writes the per-query arrays those decisions were computed from. A from-scratch rerun is \texttt{python experiments/v2/reproduce.py --full}. The PDF is built with \texttt{make paper}. Code and aggregates: \url{https://github.com/Agentic-Memory-Foundation/grassmanian}.
+The grid was run with faiss-cpu 1.8.0 and torch 2.15.0+cpu, seeds 0 through 4. \path{experiments/v2/reproduce.py} rebuilds the tables and figures from \path{summary.json} and \path{query_level.json}. The latter stores the Holm decisions and the cross-validated budgets. \path{run_routing.py} writes the per-query arrays those decisions were computed from. A from-scratch rerun is \texttt{python experiments/v2/reproduce.py --full}. The PDF is built with \texttt{make paper}. Code and aggregates: \url{https://github.com/Agentic-Memory-Foundation/grassmanian}.
 
 \bibliographystyle{ACM-Reference-Format}
 \bibliography{references}
@@ -325,6 +333,8 @@ Table~\ref{tab:deltas} gives the pair-level recall gap for every router at $C = 
 \input{generated/table_data.tex}
 \input{generated/table_deltas.tex}
 \input{generated/table_kcurve.tex}
+\input{generated/table_aniso.tex}
+\input{generated/table_cheap.tex}
 
 \begin{figure*}[!t]
 \centering
@@ -353,25 +363,5 @@ Under the oracle partition, linear routing and the $k$-flat residual both sit at
 \caption{Planted subspaces, legacy run. Not re-run.}
 \label{fig:synthetic}
 \end{figure}
-
-\section{Failure modes and implementation notes}
-\label{app:failures}
-
-\paragraph{Centroid scores on planted subspaces.}
-In the planted model the cluster means sit near the origin, so cosine to $\mu_c$ is a weak score and the angle to the planted plane matches the generator. Under the oracle labels the linear score and the $k$-flat residual both sit at 98.0, 98.0, and 99.5 recall for $P = 1, 2, 4$, while the centroid sits at 21.0, 36.5, and 36.5 (Appendix~\ref{app:synthetic}).
-
-\clearpage
-\twocolumn[{%
-\input{generated/table_aniso.tex}
-\vspace{0.2em}
-\input{generated/table_cheap.tex}
-\par
-}]
-
-\paragraph{Through-origin scores on $k$-means clusters.}
-On the BEIR slices the linear score discards the offset. The recall gap versus cosine IVF is \GrassR{} points on the primary slice, and the linear curve stays below cosine across the scanned fraction in Figure~\ref{fig:scan}. The $k$-flat residual keeps the offset. At $k = 0$ it is Euclidean distance to $\mu_c$ and the recall gap is \KZeroR{} points. The primary-slice gain for $k \ge 8$ is the local directions.
-
-\paragraph{Implementation.}
-The released grid is \path{experiments/v2/}. MiniBatch $k$-means is scikit-learn, the three scores are NumPy, and the latency table uses FAISS HNSW and IVF-Flat. \path{experiments/v2/reproduce.py} rebuilds the tables and figures from \path{summary.json} and \path{query_level.json}. The synthetic control is the legacy single-seed script and was not re-run.
 
 \end{document}

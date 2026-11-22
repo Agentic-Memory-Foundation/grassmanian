@@ -345,7 +345,7 @@ def write_tables(summary):
         )
     table_routers = r"""\begin{table}[t]
 \centering
-\caption{Mean gap versus cosine IVF at $C{=}32$, $P{=}4$, unweighted over 12 dataset/embedder pairs. Counts are Holm-Bonferroni rejections at family-wise 5\% across those 12 pairs (positive, then negative). Recall and nDCG are separate families. The test is a two-sided percentile bootstrap of the seed-averaged per-query difference, 2000 resamples. Gaps are percentage points.}
+\caption{Mean recall and nDCG gaps versus cosine IVF at $C{=}32$, $P{=}4$. Counts report statistically significant improvements/degradations via Holm-Bonferroni control (family-wise $\alpha = 0.05$) across the 12 evaluation settings (positive/negative significant pairs). Gaps are in percentage points.}
 \label{tab:routers}
 \footnotesize
 \setlength{\tabcolsep}{3pt}
@@ -376,7 +376,7 @@ Router & $\Delta$R@10 & R up/down & $\Delta$nDCG@10 & n up/down \\
             )
     table_per = r"""\begin{table*}[t]
 \centering
-\caption{Cosine IVF and the $k{=}16$ k-flat router at $C{=}32$, $P{=}4$. All figures are percentages. Brackets are uncorrected 95\% percentile bootstrap intervals on the difference (k-flat minus cosine). Bold marks a Holm-Bonferroni rejection at family-wise 5\% across the 12 pairs, for that metric. An interval can exclude zero without being bold. Exact is full cosine search on the evaluated document set, not a published full-corpus BEIR number. TREC-COVID uses 50 queries, so its intervals are wide.}
+\caption{Detailed comparison of cosine IVF and the $k{=}16$ $k$-flat router at $C{=}32$, $P{=}4$. Bracketed values indicate 95\% bootstrap confidence intervals on the paired difference. Bolded values denote statistical significance under Holm-Bonferroni correction (family-wise $\alpha = 0.05$). Exact denotes full cosine search on the evaluated document slice.}
 \label{tab:perpair}
 \footnotesize
 \setlength{\tabcolsep}{3.2pt}
@@ -404,7 +404,7 @@ Data & Model & R cos & R $k$16 & $\Delta$R [CI] & n cos & n $k$16 & $\Delta$n [C
             drows.append(" & ".join(cells) + r" \\")
     table_delta = r"""\begin{table*}[t]
 \centering
-\caption{Recall@10 gap versus cosine IVF, in points, at $C{=}32$, $P{=}4$. Brackets are uncorrected 95\% percentile bootstrap intervals. Bold marks a Holm-Bonferroni rejection at family-wise 5\% across the 12 pairs for that column.}
+\caption{Recall@10 gaps versus cosine IVF across all evaluated routers at $C{=}32$, $P{=}4$. Bracketed values indicate 95\% bootstrap confidence intervals. Bolded values denote significant differences under Holm-Bonferroni correction ($\alpha = 0.05$).}
 \label{tab:deltas}
 \scriptsize
 \setlength{\tabcolsep}{2.4pt}
@@ -443,7 +443,7 @@ Data & Model & $k{=}0$ & Grass. & $k{=}4$ & $k{=}8$ & $k{=}16$ & $k{=}32$ & PPCA
         )
     table_matched = r"""\begin{table*}[t]
 \centering
-\caption{Held-out gap, k-flat minus cosine IVF, inside a multiply-add budget. For each of 5 query folds the config is chosen on the other folds and scored on the held-out fold. Recall and nDCG are selected separately. Parentheses are Holm-Bonferroni rejections across the pairs that have a feasible config on every fold (positive, then negative). When fewer than 12 pairs are feasible, that smaller set is the family. A pair whose held-out mean is positive need not reject.}
+\caption{Held-out performance gaps (k-flat minus cosine IVF) under various computational budgets, evaluated via 5-fold cross-validation. Parentheses show positive/negative Holm-Bonferroni significant rejections ($\alpha = 0.05$).}
 \label{tab:matched}
 \small
 \begin{tabular}{lrlr}
@@ -473,7 +473,7 @@ Budget & Pairs & $\Delta$ recall (Holm up/down) & $\Delta$ nDCG (Holm up/down) \
 \centering
 \setlength{\abovecaptionskip}{4pt}%
 \setlength{\belowcaptionskip}{2pt}%
-\caption{Seed 0, one thread, batch size 1. Latency is the median of three passes over the queries. HNSW uses $M{=}32$, $\mathrm{efSearch}{=}16$. IVF-Flat uses 32 lists and 4 probes. k-flat is the NumPy router at $k{=}16$, $C{=}32$, $P{=}4$. FAISS is C++ and the k-flat column is Python, so the milliseconds are not an implementation-matched comparison. Recall is.}
+\caption{Single-thread retrieval latency and recall comparisons at seed 0 (batch size 1). Latency is the median of three runs over the queries. HNSW uses $M{=}32, \mathrm{efSearch}{=}16$; IVF-Flat uses 32 lists and 4 probes; $k$-flat uses our Python prototype ($k{=}16, C{=}32, P{=}4$). Latency values are not implementation-matched, but serve as a baseline comparison.}
 \label{tab:ann}
 \scriptsize
 \renewcommand{\arraystretch}{0.84}%
