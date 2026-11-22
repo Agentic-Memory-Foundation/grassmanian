@@ -4,7 +4,7 @@ Local principal directions as a routing signal for partitioned dense retrieval. 
 
 **Paper:** [grassmanian-rag-indexing.pdf](grassmanian-rag-indexing.pdf). ACM `acmart` `sigconf`, `nonacm`, 11 pages. November 2026.
 
-**Authors:** Parag Paul, Saurabh Sarkar, Avinash Anand, Soumick Chakraborty, Ashutosh Sahoo, and Gurukiran S.
+**Authors:** Parag Paul, Saurabh Sarkar, Avinash Anand, Ashutosh Sahoo, and Gurukiran S.
 
 ## Claim in one line
 
